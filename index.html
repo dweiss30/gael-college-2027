@@ -630,7 +630,7 @@ function buildCard(s){
   const visitedBadge = s.visited
     ? `<span class="visited" title="Gael visited this campus"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>Visited</span>`
     : ``;
-  titleWrap.innerHTML=`<h2 class="cname">${s.name}${visitedBadge}</h2><p class="cloc">${s.city}${s.drive!=null?` &middot; ~${s.drive} hr drive`:``}</p>`;
+  titleWrap.innerHTML=`<h2 class="cname">${s.name}${visitedBadge}</h2><p class="cloc">${s.city}${s.drive!=null?` &middot; ~${s.drive} hr drive${s.driveEst?" (est.)":""}`:``}</p>`;
   const star=document.createElement("button");
   star.className="star"+(state.fav.has(s.name)?" on":"");
   star.type="button";
@@ -915,10 +915,27 @@ const STATE_TIERS=[
   {h:12, st:["GA","AL","MO","IA","MN"]}
 ];
 function statesWithin(h){ const out=[]; for(const t of STATE_TIERS) if(t.h<=h+0.001) out.push(...t.st); return out; }
-const SC_FIELDS = ["id","school.name","school.city","school.state","school.ownership",
+const SC_FIELDS = ["id","school.name","school.city","school.state","school.ownership","location.lat","location.lon",
   "latest.student.size","latest.cost.tuition.out_of_state","latest.cost.attendance.academic_year",
   "latest.admissions.admission_rate.overall","latest.admissions.sat_scores.25th_percentile.overall",
   "latest.admissions.sat_scores.75th_percentile.overall","latest.academics.program_percentage.engineering"].join(",");
+
+// ---- Drive-time estimate from home (South Orange, NJ 07079) using great-circle distance.
+// Straight-line miles, scaled by a road-circuity factor, then a highway speed plus a little overhead.
+// Rough but far better than bucketing by whole state; rounded to the nearest half hour.
+const HOME_LAT=40.7479, HOME_LON=-74.2613;
+function haversineMi(la1,lo1,la2,lo2){
+  const R=3958.8, rad=Math.PI/180;
+  const dLa=(la2-la1)*rad, dLo=(lo2-lo1)*rad;
+  const a=Math.sin(dLa/2)**2+Math.cos(la1*rad)*Math.cos(la2*rad)*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(a)));
+}
+function estDriveHours(lat,lon){
+  if(lat==null||lon==null||isNaN(lat)||isNaN(lon)) return null;
+  const d=haversineMi(HOME_LAT,HOME_LON,lat,lon);
+  const speed=Math.max(40,Math.min(66,40+d/8));  // local roads near home ramping up to highway speed far out
+  return Math.round((d*1.2/speed+0.15)*2)/2;       // 1.2 road-circuity factor, small overhead, rounded to the half hour
+}
 
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
@@ -936,20 +953,22 @@ function scMap(r){
   const costNum=r["latest.cost.attendance.academic_year"]||(r["latest.cost.tuition.out_of_state"]?r["latest.cost.tuition.out_of_state"]+16000:null);
   const acc=r["latest.admissions.admission_rate.overall"];
   const engPct=r["latest.academics.program_percentage.engineering"];
+  const drive=estDriveHours(r["location.lat"],r["location.lon"]);
   return {
     name:r["school.name"],
     city:(r["school.city"]||"")+", "+(r["school.state"]||""),
     control: own===1?"Public":"Private",
     size:r["latest.student.size"]||null,
     cost: costNum?Math.round(costNum/1000):null,
-    drive:null,
+    drive:drive,
+    driveEst:drive!=null,
     sat25:r["latest.admissions.sat_scores.25th_percentile.overall"]||0,
     sat75:r["latest.admissions.sat_scores.75th_percentile.overall"]||0,
     gpa:null,
     acc: acc!=null?acc:0.65,
     eng:(engPct||0)>0,
     discovered:true,
-    note:"From the U.S. College Scorecard. This source doesn't include GPA or drive time, so confirm both yourself. The odds here lean on selectivity and any reported SAT range."
+    note:"From the U.S. College Scorecard. GPA isn't included, and the drive time is a straight-line estimate from your home, so confirm both yourself. The odds here lean on selectivity and any reported SAT range."
   };
 }
 
@@ -988,6 +1007,7 @@ async function runDiscovery(){
       if(minSize&&(!s.size||s.size<minSize)) return false;
       if(maxSize&&(!s.size||s.size>maxSize)) return false;
       if(maxCost&&(!s.cost||s.cost>Math.round(maxCost/1000))) return false;
+      if(s.drive!=null && s.drive>state.maxDrive+0.5) return false; // honor the distance slider via the estimate, with a little slack
       return true;
     });
     list.sort((a,b)=>estChance(b,state.gpa,state.sat,state.testOpt,state.mode)-estChance(a,state.gpa,state.sat,state.testOpt,state.mode));
