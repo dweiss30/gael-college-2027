@@ -129,6 +129,8 @@
 
   .ctop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
   .cname{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:18px;line-height:1.15;letter-spacing:-.01em;margin:0;}
+  .visited{display:inline-flex;align-items:center;gap:3px;vertical-align:middle;margin-left:8px;padding:2px 8px 2px 6px;border-radius:999px;background:rgba(47,93,236,.10);color:var(--accent);font-family:"Space Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;position:relative;top:-1px;}
+  .visited svg{width:11px;height:11px;flex:none;}
   .cloc{font-size:12.5px;color:var(--muted);margin:3px 0 0;}
   .star{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;display:grid;place-items:center;color:var(--faint);transition:.15s;}
   .star:hover{border-color:var(--accent);color:var(--accent);}
@@ -444,20 +446,22 @@ const SCHOOLS = [
   {name:"University of Connecticut", city:"Storrs, CT", control:"Public", size:19000, cost:62, drive:2.25, sat25:1240, sat75:1440, gpa:3.7, acc:.54, ie:false, me:true, note:"Solid mechanical engineering, classic New England flagship feel."},
   {name:"Penn State University Park", city:"State College, PA", control:"Public", size:40000, cost:58, drive:4, sat25:1180, sat75:1370, gpa:3.7, acc:.55, ie:true, me:true, note:"Top industrial and mechanical. Entry to major is competitive; the branch-to-UP 2+2 path is a real backup."},
   {name:"Virginia Tech", city:"Blacksburg, VA", control:"Public", size:30000, cost:53, drive:7, sat25:1240, sat75:1430, gpa:4.0, acc:.57, ie:true, me:true, note:"One of the best industrial & systems programs anywhere. Right at the 7-hour edge."},
-  {name:"UMass Amherst", city:"Amherst, MA", control:"Public", size:24000, cost:56, drive:3.5, sat25:1240, sat75:1420, gpa:3.85, acc:.58, ie:true, me:true, note:"The flagship you visited and liked. Engineering admits run well above the school average, so direct entry is a reach; undeclared-then-transfer is your backup plan."},
+  {name:"UMass Amherst", city:"Amherst, MA", control:"Public", size:24000, cost:56, drive:3.5, sat25:1240, sat75:1420, gpa:3.85, acc:.58, ie:true, me:true, visited:true, note:"The flagship you visited and liked. Engineering admits run well above the school average, so direct entry is a reach; undeclared-then-transfer is your backup plan."},
   {name:"Worcester Polytechnic (WPI)", city:"Worcester, MA", control:"Private", size:5000, cost:86, drive:3, sat25:0, sat75:0, gpa:3.9, acc:.58, ie:false, me:true, testBlind:true, note:"Project-based and fully test-blind, so a 1170 neither helps nor hurts. Judged on grades, rigor, and fit."},
   {name:"University of Vermont", city:"Burlington, VT", control:"Public", size:11000, cost:64, drive:5.5, sat25:1180, sat75:1370, gpa:3.6, acc:.67, ie:false, me:true, note:"Mechanical engineering in a scenic college town."},
   {name:"Hofstra University", city:"Hempstead, NY", control:"Private", size:6000, cost:73, drive:1, sat25:1140, sat75:1330, gpa:3.5, acc:.67, ie:false, me:true, note:"Mechanical engineering, the closest campus on this list to home."},
   {name:"University of Delaware", city:"Newark, DE", control:"Public", size:19000, cost:58, drive:2.5, sat25:1190, sat75:1360, gpa:3.5, acc:.71, ie:false, me:true, note:"Popular with NJ students, strong mechanical engineering. Squarely in range."},
-  {name:"Quinnipiac University", city:"Hamden, CT", control:"Private", size:6000, cost:74, drive:1.5, sat25:1100, sat75:1300, gpa:3.4, acc:.72, ie:true, me:true, note:"You visited and liked it. Direct admit into mechanical or industrial, and likely your strongest engineering bet."},
+  {name:"Quinnipiac University", city:"Hamden, CT", control:"Private", size:6000, cost:74, drive:1.5, sat25:1100, sat75:1300, gpa:3.4, acc:.72, ie:true, me:true, visited:true, note:"You visited and liked it. Direct admit into mechanical or industrial, and likely your strongest engineering bet."},
   {name:"Clarkson University", city:"Potsdam, NY", control:"Private", size:2800, cost:76, drive:6, sat25:1130, sat75:1350, gpa:3.6, acc:.74, ie:false, me:true, note:"Small and engineering-focused with strong placement for its size."},
-  {name:"University of Rhode Island", city:"Kingston, RI", control:"Public", size:14000, cost:52, drive:3.5, sat25:1050, sat75:1270, gpa:3.55, acc:.75, ie:true, me:true, note:"You visited and liked it. Has both industrial & systems and mechanical engineering."},
+  {name:"University of Rhode Island", city:"Kingston, RI", control:"Public", size:14000, cost:52, drive:3.5, sat25:1050, sat75:1270, gpa:3.55, acc:.75, ie:true, me:true, visited:true, note:"You visited and liked it. Has both industrial & systems and mechanical engineering."},
   {name:"University at Buffalo (SUNY)", city:"Buffalo, NY", control:"Public", size:20000, cost:45, drive:6.5, sat25:1170, sat75:1370, gpa:3.7, acc:.67, ie:true, me:true, note:"Well-regarded industrial & systems, and more attainable than its SUNY peer."},
   {name:"Drexel University", city:"Philadelphia, PA", control:"Private", size:14000, cost:82, drive:2, sat25:1190, sat75:1400, gpa:3.7, acc:.80, ie:false, me:true, note:"Built around co-op work experience. Mechanical engineering with paid industry terms."},
   {name:"Temple University", city:"Philadelphia, PA", control:"Public", size:24000, cost:50, drive:2, sat25:1130, sat75:1330, gpa:3.5, acc:.80, ie:false, me:true, note:"Accessible mechanical engineering on a lively urban campus."},
   {name:"Western New England Univ.", city:"Springfield, MA", control:"Private", size:2500, cost:61, drive:2.5, sat25:1080, sat75:1280, gpa:3.3, acc:.82, ie:true, me:true, note:"Dedicated industrial engineering plus mechanical, small and supportive. A comfortable likely."},
   {name:"University of New Hampshire", city:"Durham, NH", control:"Public", size:12000, cost:54, drive:4.75, sat25:1100, sat75:1290, gpa:3.4, acc:.87, ie:false, me:true, note:"Classic New England public with mechanical engineering. A strong likely."},
-  {name:"University of Maine", city:"Orono, ME", control:"Public", size:9000, cost:45, drive:6.5, sat25:1050, sat75:1250, gpa:3.4, acc:.90, ie:false, me:true, note:"High-acceptance flagship with solid mechanical engineering, and the farthest north on your list. A genuine safety where you'd sit comfortably above the typical admit."}
+  {name:"University of Maine", city:"Orono, ME", control:"Public", size:9000, cost:45, drive:6.5, sat25:1050, sat75:1250, gpa:3.4, acc:.90, ie:false, me:true, note:"High-acceptance flagship with solid mechanical engineering, and the farthest north on your list. A genuine safety where you'd sit comfortably above the typical admit."},
+  {name:"Roger Williams University", city:"Bristol, RI", control:"Private", size:3800, cost:60, drive:3.75, sat25:1130, sat75:1300, gpa:3.45, acc:.88, ie:false, me:true, visited:true, note:"You visited and liked it. A lightly selective school on the water near Providence, with an ABET-accredited engineering program (general, with concentrations). A comfortable likely."},
+  {name:"North Carolina State University", city:"Raleigh, NC", control:"Public", size:28000, cost:49, drive:8.5, sat25:1300, sat75:1470, gpa:3.9, acc:.41, ie:true, me:true, visited:true, note:"You visited and liked it. A top public engineering school with both industrial & systems and mechanical, but it sits past the 7-hour line and admits a strong-stats crowd, so treat it as a true reach."}
 ];
 
 // ---- Transfer-in feasibility: how realistic to switch from general/undeclared INTO engineering.
@@ -483,7 +487,9 @@ const TRANSFER = {
   "Temple University":{level:"open", note:"Switching into engineering is generally straightforward."},
   "Western New England Univ.":{level:"open", note:"Small, supportive program; switching in is easy with prerequisite grades."},
   "University of New Hampshire":{level:"open", note:"Switching into engineering is generally feasible with the intro sequence."},
-  "University of Maine":{level:"open", note:"Switching into engineering is generally feasible with the intro math and science."}
+  "University of Maine":{level:"open", note:"Switching into engineering is generally feasible with the intro math and science."},
+  "Roger Williams University":{level:"open", note:"A single, flexible engineering program, so settling into it is straightforward."},
+  "North Carolina State University":{level:"competitive", note:"Engineering uses a First-Year program and a competitive change-of-major into specific departments based on GPA."}
 };
 const TLABEL={open:"Usually open", defined:"Defined pathway", moderate:"Moderate", competitive:"Competitive", firstyear:"First-year general"};
 
@@ -494,7 +500,8 @@ const SCENERY={
   "Worcester Polytechnic (WPI)":2,"University of Vermont":3,"Hofstra University":3,"University of Delaware":3,
   "Quinnipiac University":3,"Clarkson University":2,"University of Rhode Island":2,"University at Buffalo (SUNY)":2,
   "Drexel University":1,"Temple University":1,"Western New England Univ.":2,"University of New Hampshire":2,
-  "University of Maine":2
+  "University of Maine":2,
+  "Roger Williams University":3,"North Carolina State University":2
 };
 
 // ---- Model ----
@@ -551,7 +558,10 @@ function buildCard(s){
   // top: name + star
   const top=document.createElement("div"); top.className="ctop";
   const titleWrap=document.createElement("div");
-  titleWrap.innerHTML=`<h2 class="cname">${s.name}</h2><p class="cloc">${s.city}${s.drive!=null?` &middot; ~${s.drive} hr drive`:``}</p>`;
+  const visitedBadge = s.visited
+    ? `<span class="visited" title="Gael visited this campus"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>Visited</span>`
+    : ``;
+  titleWrap.innerHTML=`<h2 class="cname">${s.name}${visitedBadge}</h2><p class="cloc">${s.city}${s.drive!=null?` &middot; ~${s.drive} hr drive`:``}</p>`;
   const star=document.createElement("button");
   star.className="star"+(state.fav.has(s.name)?" on":"");
   star.type="button";
@@ -566,6 +576,13 @@ function buildCard(s){
       state.fav.add(s.name);
       if(s.discovered && !SCHOOLS.some(x=>x.name===s.name)) SCHOOLS.push(s); // "star to add to your list"
     }
+    // Repaint THIS button right away. Main-list cards get rebuilt by render(),
+    // but discovery-result cards live in their own section and aren't, so without
+    // this the star you tapped down there would never fill in.
+    const on=state.fav.has(s.name);
+    star.classList.toggle("on",on);
+    star.setAttribute("aria-pressed",on);
+    star.setAttribute("aria-label",(on?"Unstar ":"Star ")+s.name);
     render();
   });
   const isHidden=state.hidden.has(s.name);
@@ -703,7 +720,7 @@ function render(){
     tallies.innerHTML=`<span class="tally">Showing <b>${view.length}</b> of ${total} removed school${total!==1?"s":""}. Tap the &#8634; on a card to bring it back.</span>`;
   } else {
     const active=SCHOOLS.filter(s=>!state.hidden.has(s.name));
-    const inDist=active.filter(s=> s.drive==null || s.drive<=state.maxDrive);
+    const inDist=active.filter(s=> s.drive==null || s.drive<=state.maxDrive || s.visited);
     const counts={likely:0,target:0,reach:0,highreach:0};
     inDist.forEach(s=>counts[band(estChance(s,state.gpa,state.sat,state.testOpt,state.mode)).key]++);
     tallies.innerHTML=
@@ -1008,6 +1025,12 @@ $("#cmpmodal").addEventListener("click",e=>{ if(e.target===$("#cmpmodal")) close
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeCompare(); });
 
 loadState();
+// One-time default: star the campuses Gael has visited so they start on his shortlist.
+// Runs a single time per device; after that, his own starring choices are respected.
+if(!lsGet("seededVisited_v1")){
+  SCHOOLS.forEach(s=>{ if(s.visited) state.fav.add(s.name); });
+  lsSet("seededVisited_v1","1");
+}
 render();
 initDiscovery();
 updateCmpBar();
