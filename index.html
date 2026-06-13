@@ -228,6 +228,37 @@
 
   .empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--muted);font-size:14px;}
 
+  /* compare */
+  .cmpbtn{margin-top:4px;width:100%;font-family:"Inter",sans-serif;font-size:12.5px;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px;cursor:pointer;transition:.15s;}
+  .cmpbtn:hover{border-color:var(--accent);color:var(--accent);}
+  .cmpbtn.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .cmpbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .cmpbar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:40;display:flex;align-items:center;gap:14px;background:var(--ink);color:#fff;border-radius:12px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.28);}
+  .cmpbar[hidden]{display:none;}
+  .cmpbar .cmpinfo{font-family:"Space Mono",monospace;font-size:13px;}
+  .cmpsecondary{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;font-family:"Inter",sans-serif;}
+  .cmpprimary{background:var(--accent);border:none;color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;}
+  .cmpprimary[disabled]{opacity:.5;cursor:not-allowed;}
+  .cmpsecondary:focus-visible,.cmpprimary:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+  .cmpmodal{position:fixed;inset:0;z-index:50;background:rgba(15,22,30,.55);display:flex;align-items:center;justify-content:center;padding:18px;}
+  .cmpmodal[hidden]{display:none;}
+  .cmpsheet{background:var(--paper);border-radius:16px;max-width:920px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;}
+  .cmphead{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 6px;}
+  .cmphead h2{font-family:"Space Grotesk",sans-serif;font-size:20px;margin:0;letter-spacing:-.01em;}
+  .cmpcap{font-size:11.5px;color:var(--muted);padding:0 20px 10px;}
+  .cmpx{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:20px;line-height:1;cursor:pointer;color:var(--muted);}
+  .cmpx:hover{color:var(--ink);border-color:var(--ink);}
+  .cmpx:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .cmpscroll{overflow:auto;padding:0 20px 20px;}
+  .cmptable{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;}
+  .cmptable th,.cmptable td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--line);vertical-align:middle;}
+  .cmptable thead th{position:sticky;top:0;background:var(--paper);font-family:"Space Grotesk",sans-serif;font-size:13.5px;font-weight:600;z-index:2;}
+  .cmptable th.cmprowlabel{position:sticky;left:0;background:var(--paper);text-align:left;font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:400;white-space:nowrap;z-index:1;}
+  .cmptable th.cmpcorner{position:sticky;left:0;top:0;background:var(--paper);z-index:3;}
+  .cmptable td.best{background:var(--likely-bg);font-weight:700;}
+  .cmpodds.likely{color:var(--likely);}.cmpodds.target{color:var(--target);}.cmpodds.reach{color:var(--reach);}.cmpodds.highreach{color:var(--highreach);}
+  .cmplink{color:var(--accent);text-decoration:none;font-size:11px;}
+
   @media (max-width:560px){
     .wrap{padding:0 16px 70px;}
     header.masthead{padding:30px 0 18px;}
@@ -255,6 +286,9 @@
     .star{width:40px;height:40px;}
     .hidebtn{width:38px;height:40px;}
     .photolink{margin-left:0;}
+    .cmpbar{left:14px;right:14px;transform:none;justify-content:space-between;gap:8px;bottom:14px;}
+    .cmpmodal{padding:10px;}
+    .cmpsheet{max-height:94vh;}
   }
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important;}
@@ -382,6 +416,20 @@
 
 </div>
 
+<div class="cmpbar" id="cmpbar" hidden>
+  <span class="cmpinfo" id="cmpcount">0 selected</span>
+  <button class="cmpsecondary" id="cmpclear" type="button">Clear</button>
+  <button class="cmpprimary" id="cmpgo" type="button" disabled>Compare</button>
+</div>
+
+<div class="cmpmodal" id="cmpmodal" hidden role="dialog" aria-modal="true" aria-label="Compare schools side by side">
+  <div class="cmpsheet">
+    <div class="cmphead"><h2>Side by side</h2><button class="cmpx" id="cmpx" type="button" aria-label="Close comparison">&times;</button></div>
+    <div class="cmpcap">Green marks the best value among these for odds, cost, distance, campus, and interest. Scroll sideways to see every school.</div>
+    <div class="cmpscroll"><table class="cmptable" id="cmptable"></table></div>
+  </div>
+</div>
+
 <script src="config.js"></script>
 <script>
 // ---- School data. Edit any figure here as you confirm real numbers. ----
@@ -408,7 +456,8 @@ const SCHOOLS = [
   {name:"Drexel University", city:"Philadelphia, PA", control:"Private", size:14000, cost:82, drive:2, sat25:1190, sat75:1400, gpa:3.7, acc:.80, ie:false, me:true, note:"Built around co-op work experience. Mechanical engineering with paid industry terms."},
   {name:"Temple University", city:"Philadelphia, PA", control:"Public", size:24000, cost:50, drive:2, sat25:1130, sat75:1330, gpa:3.5, acc:.80, ie:false, me:true, note:"Accessible mechanical engineering on a lively urban campus."},
   {name:"Western New England Univ.", city:"Springfield, MA", control:"Private", size:2500, cost:61, drive:2.5, sat25:1080, sat75:1280, gpa:3.3, acc:.82, ie:true, me:true, note:"Dedicated industrial engineering plus mechanical, small and supportive. A comfortable likely."},
-  {name:"University of New Hampshire", city:"Durham, NH", control:"Public", size:12000, cost:54, drive:4.75, sat25:1100, sat75:1290, gpa:3.4, acc:.87, ie:false, me:true, note:"Classic New England public with mechanical engineering. A strong likely."}
+  {name:"University of New Hampshire", city:"Durham, NH", control:"Public", size:12000, cost:54, drive:4.75, sat25:1100, sat75:1290, gpa:3.4, acc:.87, ie:false, me:true, note:"Classic New England public with mechanical engineering. A strong likely."},
+  {name:"University of Maine", city:"Orono, ME", control:"Public", size:9000, cost:45, drive:6.5, sat25:1050, sat75:1250, gpa:3.4, acc:.90, ie:false, me:true, note:"High-acceptance flagship with solid mechanical engineering, and the farthest north on your list. A genuine safety where you'd sit comfortably above the typical admit."}
 ];
 
 // ---- Transfer-in feasibility: how realistic to switch from general/undeclared INTO engineering.
@@ -433,7 +482,8 @@ const TRANSFER = {
   "Drexel University":{level:"open", note:"Switching into engineering is generally feasible with prerequisite grades."},
   "Temple University":{level:"open", note:"Switching into engineering is generally straightforward."},
   "Western New England Univ.":{level:"open", note:"Small, supportive program; switching in is easy with prerequisite grades."},
-  "University of New Hampshire":{level:"open", note:"Switching into engineering is generally feasible with the intro sequence."}
+  "University of New Hampshire":{level:"open", note:"Switching into engineering is generally feasible with the intro sequence."},
+  "University of Maine":{level:"open", note:"Switching into engineering is generally feasible with the intro math and science."}
 };
 const TLABEL={open:"Usually open", defined:"Defined pathway", moderate:"Moderate", competitive:"Competitive", firstyear:"First-year general"};
 
@@ -443,7 +493,8 @@ const SCENERY={
   "University of Connecticut":2,"Penn State University Park":3,"Virginia Tech":3,"UMass Amherst":2,
   "Worcester Polytechnic (WPI)":2,"University of Vermont":3,"Hofstra University":3,"University of Delaware":3,
   "Quinnipiac University":3,"Clarkson University":2,"University of Rhode Island":2,"University at Buffalo (SUNY)":2,
-  "Drexel University":1,"Temple University":1,"Western New England Univ.":2,"University of New Hampshire":2
+  "Drexel University":1,"Temple University":1,"Western New England Univ.":2,"University of New Hampshire":2,
+  "University of Maine":2
 };
 
 // ---- Model ----
@@ -482,7 +533,7 @@ function sizeTag(n){return n>=15000?"Large":n>=4000?"Mid-size":"Small";}
 
 // ---- State ----
 const state = {gpa:3.33, sat:1170, testOpt:false, mode:"eng", maxDrive:7, filter:"all", favOnly:false, sort:"chance",
-               fav:new Set(), interest:{}, hidden:new Set(), showHidden:false, query:""};
+               fav:new Set(), interest:{}, hidden:new Set(), showHidden:false, query:"", compare:new Map()};
 
 const $=s=>document.querySelector(s);
 const grid=$("#grid"), tallies=$("#tallies");
@@ -526,8 +577,8 @@ function buildCard(s){
   hideBtn.innerHTML=isHidden?"&#8634;":"&times;";
   hideBtn.addEventListener("click",()=>{
     if(state.hidden.has(s.name)) state.hidden.delete(s.name);
-    else { state.hidden.add(s.name); state.fav.delete(s.name); }
-    render();
+    else { state.hidden.add(s.name); state.fav.delete(s.name); state.compare.delete(s.name); }
+    render(); updateCmpBar();
   });
   const acts=document.createElement("div"); acts.style.cssText="display:flex;gap:6px;flex:none;";
   acts.appendChild(star); acts.appendChild(hideBtn);
@@ -602,6 +653,16 @@ function buildCard(s){
     });
   });
 
+  const inCmp=state.compare.has(s.name);
+  const cmpBtn=document.createElement("button");
+  cmpBtn.type="button"; cmpBtn.className="cmpbtn"+(inCmp?" on":"");
+  cmpBtn.textContent=inCmp?"\u2713 Comparing":"+ Compare";
+  cmpBtn.addEventListener("click",()=>{
+    if(state.compare.has(s.name)) state.compare.delete(s.name);
+    else { if(state.compare.size>=4){ flashCmp("Compare up to 4 at a time"); return; } state.compare.set(s.name,s); }
+    render(); updateCmpBar();
+  });
+
   card.appendChild(top);
   card.appendChild(specs);
   card.appendChild(campus);
@@ -619,6 +680,7 @@ function buildCard(s){
     }
   }
   card.appendChild(interest);
+  card.appendChild(cmpBtn);
   return card;
 }
 
@@ -885,9 +947,70 @@ function loadState(){
   document.querySelectorAll("#filter button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.f===state.filter));
 }
 
+// ===== Compare =====
+let cmpFlashTimer;
+function flashCmp(msg){
+  const el=$("#cmpcount"); if(!el) return;
+  el.textContent=msg;
+  clearTimeout(cmpFlashTimer);
+  cmpFlashTimer=setTimeout(()=>{ el.textContent=state.compare.size+" selected"; },1600);
+}
+function updateCmpBar(){
+  const bar=$("#cmpbar"); if(!bar) return;
+  const n=state.compare.size;
+  bar.hidden = n===0;
+  const c=$("#cmpcount"); if(c) c.textContent=n+" selected";
+  const go=$("#cmpgo"); if(go) go.disabled = n<2;
+}
+function closeCompare(){ const m=$("#cmpmodal"); if(m) m.hidden=true; document.body.style.overflow=""; }
+function clearCompare(){ state.compare.clear(); closeCompare(); render(); updateCmpBar(); }
+function openCompare(){
+  const schools=[...state.compare.values()];
+  if(schools.length<2) return;
+  const oc=s=>estChance(s,state.gpa,state.sat,state.testOpt,state.mode);
+  const rows=[
+    {label:"Admission odds", render:s=>{const p=oc(s),b=band(p);return `<span class="cmpodds ${b.key}">${Math.round(p*100)}%</span>`;}, metric:oc, dir:"high"},
+    {label:"Verdict", render:s=>{const b=band(oc(s));return `<span class="cmpodds ${b.key}">${b.label}</span>`;}},
+    {label:"Your SAT vs range", render:s=> s.testBlind?"test-blind":((s.sat25&&s.sat75)?`${state.sat||"?"} vs ${s.sat25}\u2013${s.sat75}`:"n/a")},
+    {label:"Avg GPA", render:s=> s.gpa!=null?s.gpa.toFixed(2):"n/a"},
+    {label:"Cost / yr", render:s=> s.cost?`$${s.cost}k`:"n/a", metric:s=>s.cost||null, dir:"low"},
+    {label:"Size", render:s=> s.size?`${(s.size/1000).toFixed(s.size>=10000?0:1)}k`:"n/a"},
+    {label:"From home", render:s=> s.drive!=null?`~${s.drive} hr`:"n/a", metric:s=>s.drive!=null?s.drive:null, dir:"low"},
+    {label:"Location", render:s=> s.city||"n/a"},
+    {label:"Type", render:s=> s.control||"n/a"},
+    {label:"Engineering", render:s=> s.discovered?(s.eng?"Offered":"n/a"):([s.ie?"Industrial":null,s.me?"Mechanical":null].filter(Boolean).join(", ")||"n/a")}
+  ];
+  if(state.mode==="eng") rows.push({label:"Transfer in", render:s=>{const tr=TRANSFER[s.name];return tr?TLABEL[tr.level]:"\u2014";}});
+  rows.push({label:"Campus", render:s=>{const sc=SCENERY[s.name];const m=sc?("\u25CF".repeat(sc)+"\u25CB".repeat(3-sc)):"\u2014";return `${m} <a class="cmplink" href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(s.name+" campus")}" target="_blank" rel="noopener">photos</a>`;}, metric:s=>SCENERY[s.name]||null, dir:"high"});
+  rows.push({label:"Your interest", render:s=>{const v=state.interest[s.name]||0;return v?("\u2605".repeat(v)+"\u2606".repeat(5-v)):"\u2014";}, metric:s=>state.interest[s.name]||null, dir:"high"});
+
+  let html="<thead><tr><th class='cmpcorner'></th>"+schools.map(s=>`<th>${s.name}</th>`).join("")+"</tr></thead><tbody>";
+  rows.forEach(r=>{
+    let bestVal=null;
+    if(r.dir){ const vals=schools.map(r.metric).filter(v=>v!=null); if(vals.length) bestVal=r.dir==="low"?Math.min(...vals):Math.max(...vals); }
+    html+=`<tr><th class="cmprowlabel">${r.label}</th>`;
+    schools.forEach(s=>{
+      const mv=r.dir?r.metric(s):null;
+      const isBest=r.dir && mv!=null && mv===bestVal && schools.length>1;
+      html+=`<td class="${isBest?'best':''}">${r.render(s)}</td>`;
+    });
+    html+="</tr>";
+  });
+  html+="</tbody>";
+  $("#cmptable").innerHTML=html;
+  $("#cmpmodal").hidden=false;
+  document.body.style.overflow="hidden";
+}
+$("#cmpgo").addEventListener("click",openCompare);
+$("#cmpclear").addEventListener("click",clearCompare);
+$("#cmpx").addEventListener("click",closeCompare);
+$("#cmpmodal").addEventListener("click",e=>{ if(e.target===$("#cmpmodal")) closeCompare(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeCompare(); });
+
 loadState();
 render();
 initDiscovery();
+updateCmpBar();
 </script>
 </body>
 </html>
