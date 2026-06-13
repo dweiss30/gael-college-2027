@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>College Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1F6;
+    --card:#FFFFFF;
+    --ink:#18222E;
+    --muted:#5C6B7A;
+    --faint:#8896A4;
+    --line:#D5DCE5;
+    --grid:#E2E7EE;
+    --accent:#2F5DEC;
+    --likely:#1F8A5B;
+    --target:#C7891B;
+    --reach:#DD6B2E;
+    --highreach:#C2402F;
+    --likely-bg:#E6F4EC;
+    --target-bg:#FAF1DC;
+    --reach-bg:#FBEADD;
+    --highreach-bg:#F8E1DD;
+    --shadow:0 1px 2px rgba(24,34,46,.06),0 6px 18px rgba(24,34,46,.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Inter",system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:26px 26px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;}
+
+  /* Header */
+  header.masthead{padding:46px 0 26px;}
+  .eyebrow{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;}
+  h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(30px,5vw,46px);line-height:1.02;letter-spacing:-.02em;margin:0 0 12px;}
+  .lede{font-size:15.5px;color:var(--muted);max-width:62ch;margin:0;}
+
+  /* Control panel */
+  .console{
+    position:sticky;top:0;z-index:20;
+    background:rgba(255,255,255,.86);
+    backdrop-filter:saturate(1.4) blur(10px);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:16px 18px;
+    margin-bottom:26px;
+  }
+  .console-row{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);}
+  .field input[type=number]{
+    width:118px;font-family:"Space Mono",monospace;font-size:20px;font-weight:700;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:9px 12px;
+  }
+  .field input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .toggle{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;padding-bottom:9px;}
+  .toggle input{position:absolute;opacity:0;width:0;height:0;}
+  .switch{width:40px;height:23px;border-radius:20px;background:var(--line);position:relative;transition:background .18s;flex:none;}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .18s;}
+  .toggle input:checked + .switch{background:var(--accent);}
+  .toggle input:checked + .switch::after{transform:translateX(17px);}
+  .toggle input:focus-visible + .switch{outline:2px solid var(--accent);outline-offset:2px;}
+  .toggle span.lbl{font-size:13.5px;color:var(--ink);font-weight:500;}
+  .reset{margin-left:auto;align-self:flex-end;font-family:"Inter";font-size:13px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:8px;padding:9px 13px;cursor:pointer;transition:background .15s,border-color .15s;}
+  .reset:hover{background:var(--paper);border-color:var(--accent);}
+  .reset:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .field input[type=range]{width:172px;accent-color:var(--accent);height:22px;cursor:pointer;}
+  #distval{font-family:"Space Mono",monospace;color:var(--accent);text-transform:none;letter-spacing:0;}
+
+  /* campus look */
+  .campus{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .clab{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
+  .leaves{display:inline-flex;gap:4px;}
+  .leaf{width:10px;height:10px;border-radius:2px 7px 2px 7px;background:var(--line);transform:rotate(-12deg);}
+  .leaf.on{background:var(--likely);}
+  .photolink{margin-left:auto;font-size:12px;color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap;}
+  .photolink:hover{text-decoration:underline;}
+  .photolink:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px;}
+
+  /* Summary tallies */
+  .tallies{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:15px;border-top:1px dashed var(--line);}
+  .tally{font-family:"Space Mono",monospace;font-size:12.5px;display:flex;align-items:center;gap:7px;color:var(--muted);}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .dot.likely{background:var(--likely);}.dot.target{background:var(--target);}
+  .dot.reach{background:var(--reach);}.dot.highreach{background:var(--highreach);}
+  .tally b{color:var(--ink);}
+
+  /* Filter / sort bar */
+  .toolbar{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-bottom:18px;}
+  .segmented{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:9px;overflow:hidden;}
+  .segmented button{font-family:"Inter";font-size:12.5px;font-weight:500;color:var(--muted);background:none;border:none;padding:8px 13px;cursor:pointer;border-right:1px solid var(--line);}
+  .segmented button:last-child{border-right:none;}
+  .segmented button[aria-pressed=true]{background:var(--accent);color:#fff;}
+  .segmented button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+  .sortsel{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);}
+  .sortsel select{font-family:"Inter";font-size:13px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px;cursor:pointer;}
+  .sortsel select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+  /* Grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px;}
+
+  .ccard{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:18px 18px 16px;display:flex;flex-direction:column;gap:14px;
+    transition:transform .16s ease,box-shadow .16s ease;position:relative;
+  }
+  .ccard:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(24,34,46,.07),0 14px 30px rgba(24,34,46,.10);}
+  .ccard.is-fav{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),var(--shadow);}
+
+  .ctop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .cname{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:18px;line-height:1.15;letter-spacing:-.01em;margin:0;}
+  .cloc{font-size:12.5px;color:var(--muted);margin:3px 0 0;}
+  .star{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;display:grid;place-items:center;color:var(--faint);transition:.15s;}
+  .star:hover{border-color:var(--accent);color:var(--accent);}
+  .star.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .star:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .star svg{width:17px;height:17px;}
+
+  .specrow{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.02em;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--muted);white-space:nowrap;}
+  .chip b{color:var(--ink);font-weight:700;}
+  .chip.ie{background:#EAF0FF;border-color:#C9D8FF;color:var(--accent);}
+
+  /* Gauge */
+  .gauge{display:flex;flex-direction:column;gap:7px;}
+  .gauge-head{display:flex;justify-content:space-between;align-items:baseline;}
+  .verdict{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:14px;letter-spacing:.01em;}
+  .pct{font-family:"Space Mono",monospace;font-weight:700;font-size:14px;}
+  .bar{height:9px;border-radius:6px;background:var(--paper);overflow:hidden;border:1px solid var(--line);}
+  .bar-fill{height:100%;border-radius:6px 0 0 6px;width:0;transition:width .5s cubic-bezier(.22,.61,.36,1),background .3s;}
+  .verdict.likely,.pct.likely{color:var(--likely);}.bar-fill.likely{background:var(--likely);}
+  .verdict.target,.pct.target{color:var(--target);}.bar-fill.target{background:var(--target);}
+  .verdict.reach,.pct.reach{color:var(--reach);}.bar-fill.reach{background:var(--reach);}
+  .verdict.highreach,.pct.highreach{color:var(--highreach);}.bar-fill.highreach{background:var(--highreach);}
+
+  /* SAT number line */
+  .satline{margin-top:2px;}
+  .satline .axislbl{display:flex;justify-content:space-between;font-family:"Space Mono",monospace;font-size:10px;color:var(--faint);margin-bottom:4px;}
+  .track{position:relative;height:26px;}
+  .track .rail{position:absolute;top:11px;left:0;right:0;height:4px;background:var(--grid);border-radius:3px;}
+  .track .band{position:absolute;top:9px;height:8px;background:#CBD8FF;border-radius:3px;}
+  .track .median{position:absolute;top:5px;width:2px;height:16px;background:var(--accent);border-radius:1px;}
+  .track .you{position:absolute;top:0;transform:translateX(-50%);}
+  .track .you .pin{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--ink);margin:0 auto;}
+  .track .you .ylab{font-family:"Space Mono",monospace;font-size:10px;font-weight:700;color:var(--ink);text-align:center;margin-top:1px;white-space:nowrap;}
+  .satmeta{font-family:"Space Mono",monospace;font-size:11px;color:var(--muted);margin-top:7px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+  .satmeta .tag{color:var(--faint);}
+  .noplot{font-family:"Space Mono",monospace;font-size:11.5px;color:var(--faint);padding:8px 0;font-style:italic;}
+
+  .note{font-size:12.5px;color:var(--muted);line-height:1.45;border-top:1px dashed var(--line);padding-top:11px;}
+
+  /* interest rating */
+  .interest{display:flex;align-items:center;gap:9px;}
+  .interest .ilbl{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
+  .pips{display:flex;gap:5px;}
+  .pip{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);background:#fff;cursor:pointer;padding:0;transition:.12s;}
+  .pip:hover{border-color:var(--accent);}
+  .pip.on{background:var(--accent);border-color:var(--accent);}
+  .pip:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+  /* transfer-in indicator */
+  .xfer{border-top:1px dashed var(--line);padding-top:11px;display:flex;flex-direction:column;gap:6px;}
+  .xfer-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
+  .xbadge{font-family:"Inter",sans-serif;font-weight:600;font-size:11.5px;text-transform:none;letter-spacing:0;padding:2px 9px;border-radius:6px;}
+  .xbadge.open{color:var(--accent);background:#EAF0FF;}
+  .xbadge.defined{color:var(--likely);background:var(--likely-bg);}
+  .xbadge.moderate{color:var(--target);background:var(--target-bg);}
+  .xbadge.competitive{color:var(--reach);background:var(--reach-bg);}
+  .xbadge.firstyear{color:var(--muted);background:var(--paper);border:1px solid var(--line);}
+  .xverified{font-family:"Space Mono",monospace;font-size:9.5px;color:var(--likely);font-weight:700;letter-spacing:.05em;}
+  .xnote{font-size:12px;color:var(--muted);line-height:1.42;}
+
+  /* discovery panel */
+  .discover{margin-top:40px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.72);padding:22px;box-shadow:var(--shadow);}
+  .disc-title{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:22px;margin:0 0 5px;letter-spacing:-.01em;}
+  .disc-sub{font-size:13.5px;color:var(--muted);margin:0 0 18px;max-width:62ch;}
+  .disc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
+  .disc-grid .field input,.disc-grid .field select{font-family:"Inter",sans-serif;font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 11px;width:100%;}
+  .disc-grid .field input:focus-visible,.disc-grid .field select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .hint{font-family:"Inter",sans-serif;text-transform:none;letter-spacing:0;color:var(--faint);font-size:11px;}
+  .states{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+  .stbox{display:inline-flex;align-items:center;gap:6px;font-family:"Space Mono",monospace;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer;}
+  .stbox input{accent-color:var(--accent);margin:0;}
+  .disc-actions{display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap;}
+  .search-btn{font-family:"Inter",sans-serif;font-weight:600;font-size:14px;color:#fff;background:var(--accent);border:none;border-radius:9px;padding:11px 20px;cursor:pointer;transition:filter .15s;}
+  .search-btn:hover{filter:brightness(1.08);}
+  .search-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+  .search-btn[disabled]{opacity:.55;cursor:not-allowed;}
+  .disc-status{font-family:"Space Mono",monospace;font-size:12.5px;color:var(--muted);}
+  .disc-status.err{color:var(--highreach);}
+  #dresults:empty{display:none;}
+  #dresults{margin-top:18px;}
+
+  footer.foot{margin-top:40px;padding:22px;border:1px dashed var(--line);border-radius:12px;background:rgba(255,255,255,.6);font-size:12.5px;color:var(--muted);line-height:1.55;}
+  footer.foot b{color:var(--ink);}
+
+  .empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--muted);font-size:14px;}
+
+  @media (max-width:560px){
+    .field input[type=number]{width:100%;}
+    .reset{margin-left:0;width:100%;text-align:center;}
+    .console-row{gap:14px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">College Compass · compare &amp; prioritize</p>
+    <h1>Where the numbers say you stand</h1>
+    <p class="lede">Type in your GPA and SAT and every school recalculates its admission odds. Compare them side by side, star the ones you like, and rate your own interest to build a shortlist. Applying as an engineer or not is up to you, and the switch below shows the difference either way. Use the distance slider to set how far from home you'll go, and the search at the bottom to find more schools.</p>
+  </header>
+
+  <section class="console" aria-label="Your stats">
+    <div class="console-row">
+      <div class="field">
+        <label for="gpa">Unweighted GPA</label>
+        <input type="number" id="gpa" min="0" max="4.5" step="0.01" value="3.33" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label for="sat">SAT total</label>
+        <input type="number" id="sat" min="400" max="1600" step="10" value="1170" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="dist">Max drive from home: <span id="distval">7 hrs</span></label>
+        <input type="range" id="dist" min="2" max="13" step="0.5" value="7">
+      </div>
+      <label class="toggle" for="topt">
+        <input type="checkbox" id="topt">
+        <span class="switch" aria-hidden="true"></span>
+        <span class="lbl">Apply test-optional (don't submit SAT)</span>
+      </label>
+      <div class="field">
+        <label>Applying as</label>
+        <div class="segmented" id="mode" role="group" aria-label="Applicant type">
+          <button data-m="eng" aria-pressed="true">Engineering</button>
+          <button data-m="gen" aria-pressed="false">General</button>
+        </div>
+      </div>
+      <button class="reset" id="reset" type="button">Reset to my stats</button>
+    </div>
+    <div class="tallies" id="tallies"></div>
+  </section>
+
+  <div class="toolbar">
+    <div class="segmented" id="filter" role="group" aria-label="Filter by likelihood">
+      <button data-f="all" aria-pressed="true">All</button>
+      <button data-f="likely" aria-pressed="false">Likely</button>
+      <button data-f="target" aria-pressed="false">Target</button>
+      <button data-f="reach" aria-pressed="false">Reach</button>
+    </div>
+    <label class="toggle" for="favonly" style="padding-bottom:0;">
+      <input type="checkbox" id="favonly">
+      <span class="switch" aria-hidden="true"></span>
+      <span class="lbl">Starred only</span>
+    </label>
+    <div class="sortsel">
+      <label for="sort">Sort</label>
+      <select id="sort">
+        <option value="chance">Best odds first</option>
+        <option value="shortlist">My shortlist (starred + interest)</option>
+        <option value="cost">Lowest cost</option>
+        <option value="size_l">Largest size</option>
+        <option value="size_s">Smallest size</option>
+        <option value="drive">Closest to home</option>
+        <option value="scenery">Nicest campus</option>
+        <option value="name">A to Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <section class="discover" aria-label="Discover more schools">
+    <h2 class="disc-title">Discover more schools</h2>
+    <p class="disc-sub">As you figure out what you want, search the U.S. Department of Education's college database for matches, then see your odds on each one. Star any result to add it to your list above.</p>
+    <div class="disc-grid">
+      <div class="field">
+        <label for="apikey">College Scorecard API key</label>
+        <input type="text" id="apikey" placeholder="paste your free key" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="dmajor">Field</label>
+        <select id="dmajor">
+          <option value="eng">Offers engineering</option>
+          <option value="any">Any field</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="dminsize">Min size</label>
+        <input type="number" id="dminsize" placeholder="any" min="0" step="500">
+      </div>
+      <div class="field">
+        <label for="dmaxsize">Max size</label>
+        <input type="number" id="dmaxsize" placeholder="any" min="0" step="500">
+      </div>
+      <div class="field">
+        <label for="dmaxcost">Max $/yr</label>
+        <input type="number" id="dmaxcost" placeholder="any" min="0" step="5000">
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>States to search <span class="hint">— 7-hour radius, no NJ. Uncheck any.</span></label>
+      <div class="states" id="dstates"></div>
+    </div>
+    <div class="disc-actions">
+      <button class="search-btn" id="dsearch" type="button">Search the database</button>
+      <span class="disc-status" id="dstatus"></span>
+    </div>
+    <div class="grid" id="dresults"></div>
+  </section>
+
+  <footer class="foot">
+    <b>How to read the odds.</b> Each estimate compares the entered GPA and SAT against the school's typical admitted profile, then nudges the result tougher because engineering is admitted more selectively than the university overall. It's a planning heuristic to help you sort reach from likely, not an official prediction, and it can't see essays, recommendations, or your junior-year upward trend, all of which matter.<br><br>
+    <b>About the figures.</b> Cost is an estimated yearly total for an out-of-state student before any aid, size is approximate undergraduate enrollment, and the SAT ranges are approximate middle-50 bands. Verify the exact numbers on each school's admissions page or Common Data Set before making decisions. <b>IE</b> marks schools with a dedicated industrial engineering degree; <b>ME</b> marks mechanical engineering. Starred schools and interest ratings stay for this session.<br><br>
+    <b>Engineering vs General.</b> The applicant switch shows the gap between applying straight into engineering and applying to the university generally. Engineering admits run tougher, so the odds drop in engineering mode. The gap is the price of applying direct, and the transfer-in indicator is the alternative.<br><br>
+    <b>Transfer in from general.</b> Shown only in engineering mode, this rates how realistic it is to start undeclared or in another major and switch into engineering later. <b>Defined</b> means a published GPA-and-coursework route that isn't capacity-capped, <b>Competitive</b> means a real but space-limited fight, <b>First-year general</b> means everyone starts in general engineering and picks a major after year one, and <b>Usually open</b> means switching is generally feasible if you handle the intro calculus and physics. Only UMass is marked verified, from its published policy; the rest are general reads on how each school admits engineers, so confirm the current rule with each school.<br><br>
+    <b>Discover more schools.</b> The search box queries the U.S. Department of Education's College Scorecard, the official federal college database. It needs a free API key and works once the page is online. Results come straight from that data, which doesn't include GPA or drive time, so those show as not available and the odds rely on selectivity and any reported SAT range. Treat discovered schools as leads to research, not vetted picks.<br><br>
+    <b>Distance and campus look.</b> The distance slider sets how far from South Orange to consider, and widening it also widens the states the search covers. The campus rating is a rough, subjective read from general reputation, so use "See photos" and ideally a visit to judge for yourself.
+  </footer>
+
+</div>
+
+<script>
+// ---- School data. Edit any figure here as you confirm real numbers. ----
+// sat25/sat75 = approx middle-50 SAT band. gpa = approx avg admitted unweighted GPA.
+// acc = approx OVERALL acceptance rate (0-1). cost = est. yearly total, out-of-state, before aid (thousands).
+// size = approx undergrad enrollment. drive = approx hours from 07079. testBlind = scores not considered.
+const SCHOOLS = [
+  {name:"Lehigh University", city:"Bethlehem, PA", control:"Private", size:5800, cost:84, drive:1.25, sat25:1310, sat75:1480, gpa:3.75, acc:.30, ie:true, me:true, note:"Elite engineering close to home. A high reach at your current stats, worth a swing if you love it."},
+  {name:"University of Maryland", city:"College Park, MD", control:"Public", size:31000, cost:55, drive:4, sat25:1340, sat75:1530, gpa:4.1, acc:.45, ie:false, me:true, note:"Outstanding mechanical engineering. No standalone undergrad industrial track. High reach."},
+  {name:"SUNY Binghamton", city:"Binghamton, NY", control:"Public", size:14000, cost:40, drive:3.25, sat25:1330, sat75:1490, gpa:3.8, acc:.42, ie:true, me:true, note:"Watson School industrial & systems is strong and competitive. A reach."},
+  {name:"University of Pittsburgh", city:"Pittsburgh, PA", control:"Public", size:20000, cost:50, drive:6, sat25:1280, sat75:1460, gpa:3.95, acc:.49, ie:true, me:true, note:"Strong industrial and mechanical. Rolling admissions, so applying early genuinely helps."},
+  {name:"University of Connecticut", city:"Storrs, CT", control:"Public", size:19000, cost:58, drive:2.25, sat25:1240, sat75:1440, gpa:3.7, acc:.54, ie:false, me:true, note:"Solid mechanical engineering, classic New England flagship feel."},
+  {name:"Penn State University Park", city:"State College, PA", control:"Public", size:40000, cost:52, drive:4, sat25:1180, sat75:1370, gpa:3.7, acc:.55, ie:true, me:true, note:"Top industrial and mechanical. Entry to major is competitive; the branch-to-UP 2+2 path is a real backup."},
+  {name:"Virginia Tech", city:"Blacksburg, VA", control:"Public", size:30000, cost:48, drive:7, sat25:1240, sat75:1430, gpa:4.0, acc:.57, ie:true, me:true, note:"One of the best industrial & systems programs anywhere. Right at the 7-hour edge."},
+  {name:"UMass Amherst", city:"Amherst, MA", control:"Public", size:24000, cost:50, drive:3.5, sat25:1240, sat75:1420, gpa:3.85, acc:.58, ie:true, me:true, note:"The flagship you visited and liked. Engineering admits run well above the school average, so direct entry is a reach; undeclared-then-transfer is your backup plan."},
+  {name:"Worcester Polytechnic (WPI)", city:"Worcester, MA", control:"Private", size:5000, cost:82, drive:3, sat25:0, sat75:0, gpa:3.9, acc:.58, ie:false, me:true, testBlind:true, note:"Project-based and fully test-blind, so a 1170 neither helps nor hurts. Judged on grades, rigor, and fit."},
+  {name:"University of Vermont", city:"Burlington, VT", control:"Public", size:11000, cost:58, drive:5.5, sat25:1180, sat75:1370, gpa:3.6, acc:.67, ie:false, me:true, note:"Mechanical engineering in a scenic college town."},
+  {name:"Hofstra University", city:"Hempstead, NY", control:"Private", size:6000, cost:67, drive:1, sat25:1140, sat75:1330, gpa:3.5, acc:.67, ie:false, me:true, note:"Mechanical engineering, the closest campus on this list to home."},
+  {name:"University of Delaware", city:"Newark, DE", control:"Public", size:19000, cost:53, drive:2.5, sat25:1190, sat75:1360, gpa:3.5, acc:.71, ie:false, me:true, note:"Popular with NJ students, strong mechanical engineering. Squarely in range."},
+  {name:"Quinnipiac University", city:"Hamden, CT", control:"Private", size:6000, cost:70, drive:1.5, sat25:1100, sat75:1300, gpa:3.4, acc:.72, ie:true, me:true, note:"You visited and liked it. Direct admit into mechanical or industrial, and likely your strongest engineering bet."},
+  {name:"Clarkson University", city:"Potsdam, NY", control:"Private", size:2800, cost:72, drive:6, sat25:1130, sat75:1350, gpa:3.6, acc:.74, ie:false, me:true, note:"Small and engineering-focused with strong placement for its size."},
+  {name:"University of Rhode Island", city:"Kingston, RI", control:"Public", size:14000, cost:50, drive:3.5, sat25:1050, sat75:1270, gpa:3.55, acc:.75, ie:true, me:true, note:"You visited and liked it. Has both industrial & systems and mechanical engineering."},
+  {name:"University at Buffalo (SUNY)", city:"Buffalo, NY", control:"Public", size:20000, cost:42, drive:6.5, sat25:1170, sat75:1370, gpa:3.7, acc:.67, ie:true, me:true, note:"Well-regarded industrial & systems, and more attainable than its SUNY peer."},
+  {name:"Drexel University", city:"Philadelphia, PA", control:"Private", size:14000, cost:78, drive:2, sat25:1190, sat75:1400, gpa:3.7, acc:.80, ie:false, me:true, note:"Built around co-op work experience. Mechanical engineering with paid industry terms."},
+  {name:"Temple University", city:"Philadelphia, PA", control:"Public", size:24000, cost:47, drive:2, sat25:1130, sat75:1330, gpa:3.5, acc:.80, ie:false, me:true, note:"Accessible mechanical engineering on a lively urban campus."},
+  {name:"Western New England Univ.", city:"Springfield, MA", control:"Private", size:2500, cost:58, drive:2.5, sat25:1080, sat75:1280, gpa:3.3, acc:.82, ie:true, me:true, note:"Dedicated industrial engineering plus mechanical, small and supportive. A comfortable likely."},
+  {name:"University of New Hampshire", city:"Durham, NH", control:"Public", size:12000, cost:50, drive:4.75, sat25:1100, sat75:1290, gpa:3.4, acc:.87, ie:false, me:true, note:"Classic New England public with mechanical engineering. A strong likely."}
+];
+
+// ---- Transfer-in feasibility: how realistic to switch from general/undeclared INTO engineering.
+// levels: open | defined | moderate | competitive | firstyear. Only UMass is verified from policy.
+const TRANSFER = {
+  "Lehigh University":{level:"competitive", note:"Internal transfer into engineering is GPA-competitive and not a dependable backdoor."},
+  "University of Maryland":{level:"competitive", note:"Limited-enrollment engineering; switching in is competitive and gated on calculus performance."},
+  "SUNY Binghamton":{level:"competitive", note:"Watson School transfers are competitive and space-limited."},
+  "University of Pittsburgh":{level:"moderate", note:"Defined internal-transfer route with a solid GPA in the calculus and physics sequence."},
+  "University of Connecticut":{level:"moderate", note:"Change of major into engineering needs a competitive GPA and prerequisite grades."},
+  "Penn State University Park":{level:"competitive", note:"Entrance-to-major is competitive for popular engineering majors; the branch 2+2 path is the reliable route."},
+  "Virginia Tech":{level:"firstyear", note:"Admitted engineers all start in general engineering, then apply to a specific major after first year."},
+  "UMass Amherst":{level:"defined", verified:true, note:"Needs a 2.7 GPA and a C or better in Calc I plus chemistry or physics, by end of sophomore year. Requirements-based, not capacity-capped."},
+  "Worcester Polytechnic (WPI)":{level:"open", note:"No admit-by-major gatekeeping; declaring or switching to an engineering major is straightforward."},
+  "University of Vermont":{level:"moderate", note:"Switching in is generally feasible once the intro math and science sequence is done."},
+  "Hofstra University":{level:"open", note:"Switching into engineering is generally straightforward with prerequisite grades."},
+  "University of Delaware":{level:"moderate", note:"Defined change-of-major with a minimum GPA and required prerequisite grades."},
+  "Quinnipiac University":{level:"open", note:"Small program; switching in is generally straightforward if you handle the prerequisites."},
+  "Clarkson University":{level:"open", note:"Engineering-centered school; moving into an engineering major is generally easy."},
+  "University of Rhode Island":{level:"moderate", note:"Change into engineering is feasible with the calculus sequence and a reasonable GPA."},
+  "University at Buffalo (SUNY)":{level:"moderate", note:"Defined GPA pathway to transfer into engineering; some majors more competitive than others."},
+  "Drexel University":{level:"open", note:"Switching into engineering is generally feasible with prerequisite grades."},
+  "Temple University":{level:"open", note:"Switching into engineering is generally straightforward."},
+  "Western New England Univ.":{level:"open", note:"Small, supportive program; switching in is easy with prerequisite grades."},
+  "University of New Hampshire":{level:"open", note:"Switching into engineering is generally feasible with the intro sequence."}
+};
+const TLABEL={open:"Usually open", defined:"Defined pathway", moderate:"Moderate", competitive:"Competitive", firstyear:"First-year general"};
+
+// ---- Campus look: rough, subjective 1-3 (3 = often called beautiful). Judge for yourself via the photo link.
+const SCENERY={
+  "Lehigh University":3,"University of Maryland":2,"SUNY Binghamton":2,"University of Pittsburgh":2,
+  "University of Connecticut":2,"Penn State University Park":3,"Virginia Tech":3,"UMass Amherst":2,
+  "Worcester Polytechnic (WPI)":2,"University of Vermont":3,"Hofstra University":3,"University of Delaware":3,
+  "Quinnipiac University":3,"Clarkson University":2,"University of Rhode Island":2,"University at Buffalo (SUNY)":2,
+  "Drexel University":1,"Temple University":1,"Western New England Univ.":2,"University of New Hampshire":2
+};
+
+// ---- Model ----
+const SAT_MIN=1000, SAT_MAX=1600;
+function logit(p){return Math.log(p/(1-p));}
+function sigmoid(x){return 1/(1+Math.exp(-x));}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function estChance(s, gpa, sat, testOpt, mode){
+  const accL = logit(clamp(s.acc,0.03,0.97));
+  const useSat = !!sat && !testOpt && !s.testBlind && s.sat25>0 && s.sat75>0;
+  const useGpa = !!gpa && s.gpa!=null;
+  let satZ=0;
+  if(useSat){
+    const mid=(s.sat25+s.sat75)/2;
+    const sigma=Math.max((s.sat75-s.sat25)/1.349,40);
+    satZ=(sat-mid)/sigma;
+  }
+  const gpaZ = useGpa ? (gpa - s.gpa)/0.28 : 0;
+  let combined;
+  if(useSat && useGpa) combined = 0.45*satZ + 0.55*gpaZ;
+  else if(useSat)      combined = satZ;       // SAT only (e.g. federal data has no GPA)
+  else if(useGpa)      combined = gpaZ;       // GPA only (test-optional or no range reported)
+  else                 combined = 0;          // neither: estimate from selectivity alone
+  const engShift = (mode==="eng") ? -0.45 : 0;   // engineering is admitted tougher than the university overall
+  const x = accL + 0.95*combined + engShift;
+  return clamp(sigmoid(x),0.03,0.97);
+}
+function band(p){
+  if(p>=0.72) return {key:"likely",label:"Likely"};
+  if(p>=0.45) return {key:"target",label:"Target"};
+  if(p>=0.22) return {key:"reach",label:"Reach"};
+  return {key:"highreach",label:"High reach"};
+}
+function sizeTag(n){return n>=15000?"Large":n>=4000?"Mid-size":"Small";}
+
+// ---- State ----
+const state = {gpa:3.33, sat:1170, testOpt:false, mode:"eng", maxDrive:7, filter:"all", favOnly:false, sort:"chance",
+               fav:new Set(), interest:{}};
+
+const $=s=>document.querySelector(s);
+const grid=$("#grid"), tallies=$("#tallies");
+
+function pctFmt(p){return Math.round(p*100)+"%";}
+function pos(v){return clamp((v-SAT_MIN)/(SAT_MAX-SAT_MIN),0,1)*100;}
+
+function buildCard(s){
+  const p=estChance(s,state.gpa,state.sat,state.testOpt,state.mode);
+  const b=band(p);
+  const modeWord = state.mode==="eng" ? "for engineering" : "as a general applicant";
+  const card=document.createElement("article");
+  card.className="ccard"+(state.fav.has(s.name)?" is-fav":"");
+
+  // top: name + star
+  const top=document.createElement("div"); top.className="ctop";
+  const titleWrap=document.createElement("div");
+  titleWrap.innerHTML=`<h2 class="cname">${s.name}</h2><p class="cloc">${s.city}${s.drive!=null?` &middot; ~${s.drive} hr drive`:``}</p>`;
+  const star=document.createElement("button");
+  star.className="star"+(state.fav.has(s.name)?" on":"");
+  star.type="button";
+  star.setAttribute("aria-label",(state.fav.has(s.name)?"Unstar ":"Star ")+s.name);
+  star.setAttribute("aria-pressed",state.fav.has(s.name));
+  star.innerHTML=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 18.55 6.09 21.6l1.13-6.57L2.45 10.4l6.6-.96z"/></svg>`;
+  star.addEventListener("click",()=>{
+    if(state.fav.has(s.name)){ state.fav.delete(s.name); }
+    else {
+      state.fav.add(s.name);
+      if(s.discovered && !SCHOOLS.some(x=>x.name===s.name)) SCHOOLS.push(s); // "star to add to your list"
+    }
+    render();
+  });
+  top.appendChild(titleWrap); top.appendChild(star);
+
+  // spec chips
+  const specs=document.createElement("div"); specs.className="specrow";
+  specs.innerHTML=
+    `<span class="chip">${s.control||"&mdash;"}</span>`+
+    (s.size?`<span class="chip">${sizeTag(s.size)} &middot; <b>${(s.size/1000).toFixed(s.size>=10000?0:1)}k</b></span>`:``)+
+    (s.cost?`<span class="chip">~<b>$${s.cost}k</b>/yr</span>`:``)+
+    (s.discovered
+      ? (s.eng?`<span class="chip ie">ENG offered</span>`:``)
+      : (s.ie?`<span class="chip ie">IE</span>`:``)+(s.me?`<span class="chip">ME</span>`:``));
+
+  // campus look
+  const scenery=SCENERY[s.name];
+  const photoUrl="https://www.google.com/search?tbm=isch&q="+encodeURIComponent(s.name+" campus");
+  const campus=document.createElement("div"); campus.className="campus";
+  let meter="";
+  if(scenery){ for(let i=1;i<=3;i++) meter+=`<span class="leaf${i<=scenery?" on":""}"></span>`; }
+  campus.innerHTML=
+    `<span class="clab">Campus</span>`+
+    (scenery
+      ? `<span class="leaves" title="Subjective, based on reputation">${meter}</span>`
+      : `<span class="clab" style="color:var(--faint)">judge for yourself</span>`)+
+    `<a class="photolink" href="${photoUrl}" target="_blank" rel="noopener">See photos &#8599;</a>`;
+
+  // gauge
+  const gauge=document.createElement("div"); gauge.className="gauge";
+  gauge.innerHTML=
+    `<div class="gauge-head"><span class="verdict ${b.key}">${b.label} ${modeWord}</span><span class="pct ${b.key}">${pctFmt(p)}</span></div>`+
+    `<div class="bar"><div class="bar-fill ${b.key}" style="width:${(p*100).toFixed(0)}%"></div></div>`;
+
+  // SAT number line
+  const satline=document.createElement("div"); satline.className="satline";
+  const gpaTxt = (s.gpa!=null) ? `avg GPA ~${s.gpa.toFixed(2)}` : `GPA n/a`;
+  if(s.testBlind){
+    satline.innerHTML=`<div class="noplot">Test-blind &mdash; SAT scores are not part of the decision here.</div>`;
+  } else if(state.testOpt){
+    satline.innerHTML=`<div class="noplot">Applying without scores &mdash; estimate uses GPA only.</div>`;
+  } else if(!s.sat25 || !s.sat75){
+    satline.innerHTML=`<div class="noplot">No SAT range reported for this school.</div>`;
+  } else {
+    const l=pos(s.sat25), r=pos(s.sat75), m=pos((s.sat25+s.sat75)/2), y=pos(state.sat||SAT_MIN);
+    satline.innerHTML=
+      `<div class="axislbl"><span>${SAT_MIN}</span><span>school middle 50%</span><span>${SAT_MAX}</span></div>`+
+      `<div class="track">`+
+        `<div class="rail"></div>`+
+        `<div class="band" style="left:${l}%;width:${Math.max(r-l,1)}%"></div>`+
+        `<div class="median" style="left:${m}%"></div>`+
+        (state.sat?`<div class="you" style="left:${y}%"><div class="pin"></div><div class="ylab">${state.sat}</div></div>`:``)+
+      `</div>`+
+      `<div class="satmeta"><span class="tag">25th&ndash;75th: <b>${s.sat25}&ndash;${s.sat75}</b></span><span class="tag">${gpaTxt}</span></div>`;
+  }
+
+  // note
+  const note=document.createElement("div"); note.className="note"; note.textContent=s.note;
+
+  // interest pips
+  const interest=document.createElement("div"); interest.className="interest";
+  const cur=state.interest[s.name]||0;
+  let pipsHtml=`<span class="ilbl">Your interest</span><div class="pips">`;
+  for(let i=1;i<=5;i++) pipsHtml+=`<button class="pip${i<=cur?" on":""}" data-v="${i}" type="button" aria-label="Set interest ${i} of 5"></button>`;
+  pipsHtml+=`</div>`;
+  interest.innerHTML=pipsHtml;
+  interest.querySelectorAll(".pip").forEach(pip=>{
+    pip.addEventListener("click",()=>{
+      const v=+pip.dataset.v;
+      state.interest[s.name]=(state.interest[s.name]===v)?0:v; // click same to clear
+      render();
+    });
+  });
+
+  card.appendChild(top);
+  card.appendChild(specs);
+  card.appendChild(campus);
+  card.appendChild(gauge);
+  card.appendChild(satline);
+  card.appendChild(note);
+  if(state.mode==="eng"){
+    const t=TRANSFER[s.name];
+    if(t){
+      const xfer=document.createElement("div"); xfer.className="xfer";
+      xfer.innerHTML=
+        `<div class="xfer-head">Transfer in from general <span class="xbadge ${t.level}">${TLABEL[t.level]}</span>${t.verified?'<span class="xverified">&check; VERIFIED</span>':''}</div>`+
+        `<div class="xnote">${t.note}</div>`;
+      card.appendChild(xfer);
+    }
+  }
+  card.appendChild(interest);
+  return card;
+}
+
+function render(){
+  // compute + filter
+  let rows=SCHOOLS
+    .filter(s=> s.drive==null || s.drive<=state.maxDrive)
+    .map(s=>{
+      const p=estChance(s,state.gpa,state.sat,state.testOpt,state.mode);
+      return {s,p,b:band(p)};
+    });
+
+  // tallies (always over full set)
+  const counts={likely:0,target:0,reach:0,highreach:0};
+  rows.forEach(r=>counts[r.b.key]++);
+  tallies.innerHTML=
+    `<span class="tally"><span class="dot likely"></span><b>${counts.likely}</b> likely</span>`+
+    `<span class="tally"><span class="dot target"></span><b>${counts.target}</b> target</span>`+
+    `<span class="tally"><span class="dot reach"></span><b>${counts.reach}</b> reach</span>`+
+    `<span class="tally"><span class="dot highreach"></span><b>${counts.highreach}</b> high reach</span>`+
+    `<span class="tally" style="margin-left:auto;color:var(--faint)">${state.mode==="eng"?"Engineering applicant":"General applicant"} &middot; ${state.testOpt?"GPA only (test-optional)":"GPA + SAT"}</span>`;
+
+  // filter
+  let view=rows.filter(r=>{
+    if(state.filter==="reach"){ if(r.b.key!=="reach"&&r.b.key!=="highreach") return false; }
+    else if(state.filter!=="all" && r.b.key!==state.filter) return false;
+    if(state.favOnly && !state.fav.has(r.s.name)) return false;
+    return true;
+  });
+
+  // sort
+  const intOf=n=>state.interest[n]||0;
+  view.sort((a,b)=>{
+    switch(state.sort){
+      case "shortlist":{
+        const fa=state.fav.has(a.s.name)?1:0, fb=state.fav.has(b.s.name)?1:0;
+        if(fa!==fb) return fb-fa;
+        if(intOf(b.s.name)!==intOf(a.s.name)) return intOf(b.s.name)-intOf(a.s.name);
+        return b.p-a.p;
+      }
+      case "cost": return a.s.cost-b.s.cost;
+      case "size_l": return b.s.size-a.s.size;
+      case "size_s": return a.s.size-b.s.size;
+      case "drive": return a.s.drive-b.s.drive;
+      case "scenery": return (SCENERY[b.s.name]||0)-(SCENERY[a.s.name]||0);
+      case "name": return a.s.name.localeCompare(b.s.name);
+      default: return b.p-a.p; // chance
+    }
+  });
+
+  grid.innerHTML="";
+  if(view.length===0){
+    const e=document.createElement("div"); e.className="empty";
+    e.textContent="No schools match this view. Try clearing the filter or the starred-only switch.";
+    grid.appendChild(e);
+    return;
+  }
+  view.forEach(r=>grid.appendChild(buildCard(r.s)));
+}
+
+// ---- Wiring ----
+$("#gpa").addEventListener("input",e=>{state.gpa=parseFloat(e.target.value)||0;render();});
+$("#sat").addEventListener("input",e=>{state.sat=parseInt(e.target.value)||0;render();});
+$("#dist").addEventListener("input",e=>{
+  state.maxDrive=parseFloat(e.target.value);
+  $("#distval").textContent=state.maxDrive+" hrs";
+  renderStateBoxes();
+  render();
+});
+$("#topt").addEventListener("change",e=>{state.testOpt=e.target.checked;render();});
+$("#favonly").addEventListener("change",e=>{state.favOnly=e.target.checked;render();});
+$("#sort").addEventListener("change",e=>{state.sort=e.target.value;render();});
+$("#reset").addEventListener("click",()=>{
+  state.gpa=3.33; state.sat=1170; state.testOpt=false;
+  $("#gpa").value="3.33"; $("#sat").value="1170"; $("#topt").checked=false;
+  render();
+});
+document.querySelectorAll("#filter button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    state.filter=btn.dataset.f;
+    document.querySelectorAll("#filter button").forEach(b=>b.setAttribute("aria-pressed", b===btn));
+    render();
+  });
+});
+document.querySelectorAll("#mode button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    state.mode=btn.dataset.m;
+    document.querySelectorAll("#mode button").forEach(b=>b.setAttribute("aria-pressed", b===btn));
+    render();
+  });
+});
+
+// ===== Discover more schools (U.S. Dept. of Education College Scorecard API) =====
+// Optional: paste your free key between the quotes to skip the on-page field.
+const SCORECARD_API_KEY = "";
+// States grouped by rough drive bands from South Orange; the slider includes every band within range.
+const STATE_TIERS=[
+  {h:2,  st:["NY","PA","CT","DE"]},
+  {h:4,  st:["RI","MA","MD","DC","VA","NH"]},
+  {h:6,  st:["VT","ME","WV","OH"]},
+  {h:9,  st:["NC","SC","KY","TN","IN","MI","IL","WI"]},
+  {h:12, st:["GA","AL","MO","IA","MN"]}
+];
+function statesWithin(h){ const out=[]; for(const t of STATE_TIERS) if(t.h<=h+0.001) out.push(...t.st); return out; }
+const SC_FIELDS = ["id","school.name","school.city","school.state","school.ownership",
+  "latest.student.size","latest.cost.tuition.out_of_state","latest.cost.attendance.academic_year",
+  "latest.admissions.admission_rate.overall","latest.admissions.sat_scores.25th_percentile.overall",
+  "latest.admissions.sat_scores.75th_percentile.overall","latest.academics.program_percentage.engineering"].join(",");
+
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+function renderStateBoxes(){
+  const wrap=$("#dstates"); if(!wrap) return;
+  const prev={}; wrap.querySelectorAll("input").forEach(i=>prev[i.value]=i.checked);
+  const sts=statesWithin(state.maxDrive);
+  wrap.innerHTML=sts.map(st=>
+    `<label class="stbox"><input type="checkbox" value="${st}" ${prev[st]===false?"":"checked"}> ${st}</label>`).join("");
+}
+
+function scMap(r){
+  const own=r["school.ownership"];
+  const costNum=r["latest.cost.attendance.academic_year"]||r["latest.cost.tuition.out_of_state"];
+  const acc=r["latest.admissions.admission_rate.overall"];
+  const engPct=r["latest.academics.program_percentage.engineering"];
+  return {
+    name:r["school.name"],
+    city:(r["school.city"]||"")+", "+(r["school.state"]||""),
+    control: own===1?"Public":"Private",
+    size:r["latest.student.size"]||null,
+    cost: costNum?Math.round(costNum/1000):null,
+    drive:null,
+    sat25:r["latest.admissions.sat_scores.25th_percentile.overall"]||0,
+    sat75:r["latest.admissions.sat_scores.75th_percentile.overall"]||0,
+    gpa:null,
+    acc: acc!=null?acc:0.65,
+    eng:(engPct||0)>0,
+    discovered:true,
+    note:"From the U.S. College Scorecard. This source doesn't include GPA or drive time, so confirm both yourself. The odds here lean on selectivity and any reported SAT range."
+  };
+}
+
+async function runDiscovery(){
+  const status=$("#dstatus"), btn=$("#dsearch"), results=$("#dresults");
+  const key=(($("#apikey").value)||SCORECARD_API_KEY||"").trim();
+  if(!key){ status.className="disc-status err"; status.textContent="Add your free API key first (steps are below)."; return; }
+  lsSet("scorecardKey",($("#apikey").value||"").trim());
+  const states=[...document.querySelectorAll("#dstates input:checked")].map(c=>c.value);
+  if(!states.length){ status.className="disc-status err"; status.textContent="Pick at least one state."; return; }
+  const onlyEng=$("#dmajor").value==="eng";
+  const minSize=parseInt($("#dminsize").value)||0;
+  const maxSize=parseInt($("#dmaxsize").value)||0;
+  const maxCost=parseInt($("#dmaxcost").value)||0;
+
+  status.className="disc-status"; status.textContent="Searching the database\u2026"; btn.disabled=true; results.innerHTML="";
+  try{
+    const mkUrl=page=>{
+      const p=new URLSearchParams();
+      p.set("api_key",key); p.set("fields",SC_FIELDS); p.set("per_page","100"); p.set("page",String(page));
+      p.set("school.state",states.join(","));
+      return "https://api.data.gov/ed/collegescorecard/v1/schools?"+p.toString();
+    };
+    const [r0,r1]=await Promise.all([fetch(mkUrl(0)),fetch(mkUrl(1))]);
+    if(!r0.ok) throw new Error("the server returned status "+r0.status+" (check that the key is right)");
+    const d0=await r0.json(), d1=r1.ok?await r1.json():{results:[]};
+    if(d0.errors&&d0.errors.length) throw new Error(d0.errors[0].message||"the query was rejected");
+    const known=new Set(SCHOOLS.map(s=>s.name.toLowerCase()));
+    const seen=new Set();
+    let list=(d0.results||[]).concat(d1.results||[]).map(scMap).filter(s=>{
+      if(!s.name) return false;
+      const k=s.name.toLowerCase();
+      if(known.has(k)||seen.has(k)) return false; seen.add(k);
+      if(onlyEng&&!s.eng) return false;
+      if(minSize&&(!s.size||s.size<minSize)) return false;
+      if(maxSize&&(!s.size||s.size>maxSize)) return false;
+      if(maxCost&&(!s.cost||s.cost>Math.round(maxCost/1000))) return false;
+      return true;
+    });
+    list.sort((a,b)=>estChance(b,state.gpa,state.sat,state.testOpt,state.mode)-estChance(a,state.gpa,state.sat,state.testOpt,state.mode));
+    list=list.slice(0,50);
+    if(!list.length){ status.textContent="No matches. Try more states or looser filters."; return; }
+    status.textContent="Found "+list.length+" school"+(list.length>1?"s":"")+" (a sample from the database). Star any to add them above.";
+    list.forEach(s=>results.appendChild(buildCard(s)));
+  }catch(err){
+    status.className="disc-status err";
+    status.textContent="Couldn't reach the database: "+err.message+".";
+  }finally{ btn.disabled=false; }
+}
+
+function initDiscovery(){
+  renderStateBoxes();
+  const keyInput=$("#apikey");
+  if(keyInput){
+    const saved=SCORECARD_API_KEY||lsGet("scorecardKey")||"";
+    if(saved) keyInput.value=saved;
+    keyInput.addEventListener("change",()=>lsSet("scorecardKey",keyInput.value.trim()));
+  }
+  const b=$("#dsearch"); if(b) b.addEventListener("click",runDiscovery);
+}
+
+render();
+initDiscovery();
+</script>
+</body>
+</html>
