@@ -146,6 +146,8 @@
   .hiddenbtn[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink);}
   .hiddenbtn:hover{border-color:var(--ink);}
   .hiddenbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .resetbtn{color:var(--faint);}
+  .resetbtn:hover{border-color:var(--highreach);color:var(--highreach);}
   .searchbox{font-family:"Inter",sans-serif;font-size:13.5px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 12px;min-width:190px;}
   .searchbox::placeholder{color:var(--faint);}
   .searchbox:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
@@ -364,6 +366,7 @@
         <option value="name">A to Z</option>
       </select>
     </div>
+    <button class="hiddenbtn resetbtn" id="resetBtn" type="button" style="margin-left:auto;" title="Clear this device's saved choices and start fresh">Reset to defaults</button>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -789,6 +792,12 @@ $("#dist").addEventListener("input",e=>{
 });
 $("#topt").addEventListener("change",e=>{state.testOpt=e.target.checked;render();});
 $("#favonly").addEventListener("change",e=>{state.favOnly=e.target.checked;render();});
+$("#resetBtn").addEventListener("click",()=>{
+  const ok=confirm("Reset this device back to the starting point?\n\nThis clears your stars, interest ratings, removed schools, any schools added from Discover, and your saved GPA / SAT / distance. The visited campuses get re-starred. Only this browser on this device is affected, not Gael's copy.");
+  if(!ok) return;
+  try{ localStorage.removeItem("ccState"); localStorage.removeItem("seededVisited_v1"); }catch(e){}
+  location.reload();
+});
 $("#hiddenToggle").addEventListener("click",()=>{ state.showHidden=!state.showHidden; render(); });
 $("#sort").addEventListener("change",e=>{state.sort=e.target.value;render();});
 $("#reset").addEventListener("click",()=>{
