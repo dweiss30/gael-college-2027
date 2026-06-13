@@ -262,6 +262,9 @@
   .states{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
   .stbox{display:inline-flex;align-items:center;gap:6px;font-family:"Space Mono",monospace;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer;}
   .stbox input{accent-color:var(--accent);margin:0;}
+  .state-actions{float:right;display:inline-flex;gap:14px;}
+  .statebtn{font-family:"Inter",sans-serif;font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;}
+  .statebtn:hover{text-decoration:underline;}
   .disc-actions{display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap;}
   .search-btn{font-family:"Inter",sans-serif;font-weight:600;font-size:14px;color:#fff;background:var(--accent);border:none;border-radius:9px;padding:11px 20px;cursor:pointer;transition:filter .15s;}
   .search-btn:hover{filter:brightness(1.08);}
@@ -478,7 +481,9 @@
       </div>
     </div>
     <div class="field" style="margin-top:12px;">
-      <label>States to search <span class="hint">— 7-hour radius, no NJ. Uncheck any.</span></label>
+      <label>States to search <span class="hint">— no NJ.</span>
+        <span class="state-actions"><button type="button" id="statesAll" class="statebtn">Check all</button><button type="button" id="statesNone" class="statebtn">Uncheck all</button></span>
+      </label>
       <div class="states" id="dstates"></div>
     </div>
     <div class="disc-actions">
@@ -1035,6 +1040,8 @@ $("#nolimit").addEventListener("change",e=>{
   renderStateBoxes();
   render();
 });
+$("#statesAll").addEventListener("click",()=>{ document.querySelectorAll("#dstates input").forEach(i=>i.checked=true); });
+$("#statesNone").addEventListener("click",()=>{ document.querySelectorAll("#dstates input").forEach(i=>i.checked=false); });
 $("#topt").addEventListener("change",e=>{state.testOpt=e.target.checked;render();});
 $("#favonly").addEventListener("change",e=>{state.favOnly=e.target.checked;render();});
 document.querySelectorAll("#viewtoggle button").forEach(btn=>{
