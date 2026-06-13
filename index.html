@@ -352,6 +352,7 @@
 
 </div>
 
+<script src="config.js"></script>
 <script>
 // ---- School data. Edit any figure here as you confirm real numbers. ----
 // sat25/sat75 = approx middle-50 SAT band. gpa = approx avg admitted unweighted GPA.
@@ -702,8 +703,10 @@ document.querySelectorAll("#mode button").forEach(btn=>{
 });
 
 // ===== Discover more schools (U.S. Dept. of Education College Scorecard API) =====
-// Optional: paste your free key between the quotes to skip the on-page field.
-const SCORECARD_API_KEY = "";
+// The key is read from config.js (window.SCORECARD_API_KEY) if that file exists,
+// so you set the key once in config.js and never edit this file's key again.
+// You can also paste a key between the quotes below as a fallback.
+const SCORECARD_API_KEY = (typeof window !== "undefined" && window.SCORECARD_API_KEY) ? window.SCORECARD_API_KEY : "";
 // States grouped by rough drive bands from South Orange; the slider includes every band within range.
 const STATE_TIERS=[
   {h:2,  st:["NY","PA","CT","DE"]},
