@@ -88,6 +88,9 @@
   .reset:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
   .field input[type=range]{width:172px;accent-color:var(--accent);height:22px;cursor:pointer;}
   #distval{font-family:"Space Mono",monospace;color:var(--accent);text-transform:none;letter-spacing:0;}
+  .nolimit-row{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:8px;cursor:pointer;user-select:none;}
+  .nolimit-row input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;}
+  .field input[type=range]:disabled{opacity:.4;cursor:not-allowed;}
 
   /* campus look */
   .campus{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
@@ -366,6 +369,7 @@
       <div class="field">
         <label for="dist">Max drive from home: <span id="distval">7 hrs</span></label>
         <input type="range" id="dist" min="2" max="13" step="0.5" value="7">
+        <label class="nolimit-row" for="nolimit"><input type="checkbox" id="nolimit"> Show schools at any distance</label>
       </div>
       <label class="toggle" for="topt">
         <input type="checkbox" id="topt">
@@ -671,7 +675,7 @@ function band(p){
 function sizeTag(n){return n>=15000?"Large":n>=4000?"Mid-size":"Small";}
 
 // ---- State ----
-const state = {gpa:3.33, sat:1170, testOpt:false, mode:"engineering", maxDrive:7, filter:"all", favOnly:false, sort:"chance", view:"list",
+const state = {gpa:3.33, sat:1170, testOpt:false, mode:"engineering", maxDrive:7, noDistLimit:false, filter:"all", favOnly:false, sort:"chance", view:"list",
                fav:new Set(), interest:{}, hidden:new Set(), showHidden:false, query:"", compare:new Map()};
 
 const $=s=>document.querySelector(s);
@@ -868,7 +872,7 @@ function render(){
     const offersMajor = s => major==="undecided" || !s.fields || s.fields.includes(major);
     const allActive=SCHOOLS.filter(s=>!state.hidden.has(s.name));
     const active=allActive.filter(offersMajor);
-    const inDist=active.filter(s=> s.drive==null || s.drive<=state.maxDrive || s.visited);
+    const inDist=active.filter(s=> state.noDistLimit || s.drive==null || s.drive<=state.maxDrive || s.visited);
     const counts={likely:0,target:0,reach:0,highreach:0};
     inDist.forEach(s=>counts[band(estChance(s,state.gpa,state.sat,state.testOpt,state.mode)).key]++);
     tallies.innerHTML=
@@ -1024,6 +1028,13 @@ $("#dist").addEventListener("input",e=>{
   renderStateBoxes();
   render();
 });
+$("#nolimit").addEventListener("change",e=>{
+  state.noDistLimit=e.target.checked;
+  const di=$("#dist"); if(di) di.disabled=state.noDistLimit;
+  $("#distval").textContent=state.noDistLimit?"no limit":state.maxDrive+" hrs";
+  renderStateBoxes();
+  render();
+});
 $("#topt").addEventListener("change",e=>{state.testOpt=e.target.checked;render();});
 $("#favonly").addEventListener("change",e=>{state.favOnly=e.target.checked;render();});
 document.querySelectorAll("#viewtoggle button").forEach(btn=>{
@@ -1069,6 +1080,8 @@ const STATE_TIERS=[
   {h:12, st:["GA","AL","MO","IA","MN"]}
 ];
 function statesWithin(h){ const out=[]; for(const t of STATE_TIERS) if(t.h<=h+0.001) out.push(...t.st); return out; }
+// Every state (minus NJ, which is excluded throughout) for when the distance limit is turned off.
+const ALL_STATES=["AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
 const SC_FIELDS = ["id","school.name","school.city","school.state","school.ownership","location.lat","location.lon",
   "latest.student.size","latest.cost.tuition.out_of_state","latest.cost.attendance.academic_year",
   "latest.admissions.admission_rate.overall","latest.admissions.sat_scores.25th_percentile.overall",
@@ -1099,9 +1112,12 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 function renderStateBoxes(){
   const wrap=$("#dstates"); if(!wrap) return;
   const prev={}; wrap.querySelectorAll("input").forEach(i=>prev[i.value]=i.checked);
-  const sts=statesWithin(state.maxDrive);
-  wrap.innerHTML=sts.map(st=>
-    `<label class="stbox"><input type="checkbox" value="${st}" ${prev[st]===false?"":"checked"}> ${st}</label>`).join("");
+  const near=new Set(statesWithin(13)); // the within-reach states stay on by default
+  const sts=state.noDistLimit ? ALL_STATES : statesWithin(state.maxDrive);
+  wrap.innerHTML=sts.map(st=>{
+    const checked = (st in prev) ? prev[st] : (state.noDistLimit ? near.has(st) : true);
+    return `<label class="stbox"><input type="checkbox" value="${st}" ${checked?"checked":""}> ${st}</label>`;
+  }).join("");
 }
 
 function scMap(r){
@@ -1175,7 +1191,7 @@ async function runDiscovery(){
       if(minSize&&(!s.size||s.size<minSize)) return false;
       if(maxSize&&(!s.size||s.size>maxSize)) return false;
       if(maxCost&&(!s.cost||s.cost>Math.round(maxCost/1000))) return false;
-      if(s.drive!=null && s.drive>state.maxDrive+0.5) return false; // honor the distance slider via the estimate, with a little slack
+      if(!state.noDistLimit && s.drive!=null && s.drive>state.maxDrive+0.5) return false; // honor the distance slider via the estimate, unless the limit is off
       return true;
     });
     list.sort((a,b)=>estChance(b,state.gpa,state.sat,state.testOpt,state.mode)-estChance(a,state.gpa,state.sat,state.testOpt,state.mode));
@@ -1210,7 +1226,7 @@ function initDiscovery(){
 function saveState(){
   const d={
     fav:[...state.fav], interest:state.interest,
-    gpa:state.gpa, sat:state.sat, maxDrive:state.maxDrive,
+    gpa:state.gpa, sat:state.sat, maxDrive:state.maxDrive, noDistLimit:state.noDistLimit,
     mode:state.mode, testOpt:state.testOpt, filter:state.filter, sort:state.sort, view:state.view,
     hidden:[...state.hidden],
     added:SCHOOLS.filter(s=>s.discovered)
@@ -1227,6 +1243,7 @@ function loadState(){
   if(typeof d.gpa==="number") state.gpa=d.gpa;
   if(typeof d.sat==="number") state.sat=d.sat;
   if(typeof d.maxDrive==="number") state.maxDrive=d.maxDrive;
+  if(typeof d.noDistLimit==="boolean") state.noDistLimit=d.noDistLimit;
   if(d.mode){ state.mode = ({eng:"engineering", gen:"undecided"})[d.mode] || (MAJORS[d.mode] ? d.mode : "engineering"); }
   if(typeof d.testOpt==="boolean") state.testOpt=d.testOpt;
   if(d.filter) state.filter=d.filter;
@@ -1236,8 +1253,9 @@ function loadState(){
   // reflect restored values in the controls
   const g=$("#gpa"); if(g) g.value=state.gpa;
   const sa=$("#sat"); if(sa) sa.value=state.sat||"";
-  const di=$("#dist"); if(di) di.value=state.maxDrive;
-  const dv=$("#distval"); if(dv) dv.textContent=state.maxDrive+" hrs";
+  const di=$("#dist"); if(di){ di.value=state.maxDrive; di.disabled=state.noDistLimit; }
+  const dv=$("#distval"); if(dv) dv.textContent=state.noDistLimit?"no limit":state.maxDrive+" hrs";
+  const nl=$("#nolimit"); if(nl) nl.checked=state.noDistLimit;
   const to=$("#topt"); if(to) to.checked=state.testOpt;
   const so=$("#sort"); if(so) so.value=state.sort;
   const mj=$("#major"); if(mj){ const has=Array.prototype.some.call(mj.options,o=>o.value===state.mode); if(!has) state.mode="engineering"; mj.value=state.mode; }
