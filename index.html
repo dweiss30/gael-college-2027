@@ -12,6 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
 <style>
   :root{
     --paper:#EEF1F6;
@@ -154,6 +156,40 @@
   .hiddenbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
   .resetbtn{color:var(--faint);}
   .resetbtn:hover{border-color:var(--highreach);color:var(--highreach);}
+  .viewtoggle{margin-bottom:16px;}
+  .mapview{margin-bottom:26px;}
+  .maptopbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:10px;}
+  .maplegend{display:flex;flex-wrap:wrap;gap:14px;}
+  .mleg{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);}
+  .mleg-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid #fff;box-shadow:0 0 0 1px var(--line);}
+  .mleg-dot.likely{background:var(--likely);} .mleg-dot.target{background:var(--target);}
+  .mleg-dot.reach{background:var(--reach);} .mleg-dot.highreach{background:var(--highreach);}
+  .mleg-dot.starred{background:var(--target);border-color:#B07A1E;box-shadow:0 0 0 2px #B07A1E;}
+  .mleg-dot.home{background:#fff;border-color:var(--ink);box-shadow:0 0 0 1px var(--ink);}
+  .mapcount{margin-left:auto;font-family:"Space Mono",monospace;font-size:12px;color:var(--faint);}
+  #mapcanvas{height:480px;width:100%;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#dfe6ee;z-index:0;}
+  .maphint{font-size:12.5px;color:var(--faint);margin:10px 2px 12px;}
+  .mapdots{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;}
+  .mdot{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;transition:border-color .12s,background .12s;}
+  .mdot:hover{border-color:var(--accent);}
+  .mdot.fav{background:var(--target-bg);border-color:#E7CB86;}
+  .mdot-pin{width:11px;height:11px;border-radius:50%;flex:none;border:1.5px solid #fff;box-shadow:0 0 0 1px var(--line);}
+  .mdot-pin.likely{background:var(--likely);} .mdot-pin.target{background:var(--target);}
+  .mdot-pin.reach{background:var(--reach);} .mdot-pin.highreach{background:var(--highreach);}
+  .mdot-name{font-size:13px;font-weight:500;color:var(--ink);flex:1;line-height:1.2;}
+  .mdot-fav{color:var(--target);}
+  .mdot-meta{font-family:"Space Mono",monospace;font-size:11px;color:var(--faint);white-space:nowrap;flex:none;}
+  .mpop{font-family:"Inter",sans-serif;min-width:200px;}
+  .mpop-name{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:15px;color:var(--ink);margin-bottom:2px;}
+  .mpop-loc{font-size:12px;color:var(--muted);margin-bottom:7px;}
+  .mpop-odds{font-size:13px;color:var(--ink);margin-bottom:5px;}
+  .mpop-band{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;color:#fff;}
+  .mpop-band.likely{background:var(--likely);} .mpop-band.target{background:var(--target);}
+  .mpop-band.reach{background:var(--reach);} .mpop-band.highreach{background:var(--highreach);}
+  .mpop-meta{font-size:11.5px;color:var(--faint);margin-bottom:9px;}
+  .mpop-star{width:100%;font-family:"Inter",sans-serif;font-size:12.5px;font-weight:600;color:var(--accent);background:#fff;border:1px solid var(--accent);border-radius:8px;padding:7px;cursor:pointer;}
+  .mpop-star.on{background:var(--target);border-color:#B07A1E;color:#fff;}
+  .leaflet-popup-content{margin:12px 14px;}
   .searchbox{font-family:"Inter",sans-serif;font-size:13.5px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 12px;min-width:190px;}
   .searchbox::placeholder{color:var(--faint);}
   .searchbox:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
@@ -300,6 +336,8 @@
     .cmpbar{left:14px;right:14px;transform:none;justify-content:space-between;gap:8px;bottom:14px;}
     .cmpmodal{padding:10px;}
     .cmpsheet{max-height:94vh;}
+    #mapcanvas{height:58vh;min-height:340px;}
+    .mapdots{grid-template-columns:1fr;}
   }
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important;}
@@ -349,6 +387,11 @@
     <div class="tallies" id="tallies"></div>
   </section>
 
+  <div class="segmented viewtoggle" id="viewtoggle" role="group" aria-label="Switch between list and map">
+    <button data-v="list" aria-pressed="true">List</button>
+    <button data-v="map" aria-pressed="false">Map</button>
+  </div>
+
   <div class="toolbar">
     <input type="search" id="search" class="searchbox" placeholder="Find a school…" autocomplete="off" aria-label="Find a school by name">
     <div class="segmented" id="filter" role="group" aria-label="Filter by likelihood">
@@ -382,6 +425,23 @@
 
   <div class="grid" id="grid"></div>
 
+  <section class="mapview" id="mapview" hidden aria-label="Map of schools">
+    <div class="maptopbar">
+      <div class="maplegend">
+        <span class="mleg"><span class="mleg-dot likely"></span>Likely</span>
+        <span class="mleg"><span class="mleg-dot target"></span>Target</span>
+        <span class="mleg"><span class="mleg-dot reach"></span>Reach</span>
+        <span class="mleg"><span class="mleg-dot highreach"></span>High reach</span>
+        <span class="mleg"><span class="mleg-dot starred"></span>Starred</span>
+        <span class="mleg"><span class="mleg-dot home"></span>Home</span>
+      </div>
+      <span class="mapcount" id="mapcount"></span>
+    </div>
+    <div id="mapcanvas"></div>
+    <p class="maphint">Tap a dot for details and to star it. The list below mirrors the map, tap a row to fly to that school.</p>
+    <div class="mapdots" id="mapdots"></div>
+  </section>
+
   <section class="discover" aria-label="Discover more schools">
     <h2 class="disc-title">Discover more schools</h2>
     <p class="disc-sub">As you figure out what you want, search the U.S. Department of Education's college database for matches, then see your odds on each one. Star any result to add it to your list above.</p>
@@ -393,8 +453,11 @@
       <div class="field">
         <label for="dmajor">Field</label>
         <select id="dmajor">
-          <option value="eng">Offers engineering</option>
-          <option value="any">Any field</option>
+          <option value="any" selected>Any field</option>
+          <option value="engineering">Engineering</option>
+          <option value="history">History</option>
+          <option value="geology">Geology / earth science</option>
+          <option value="art">Art &amp; design</option>
         </select>
       </div>
       <div class="field">
@@ -453,37 +516,37 @@
 // acc = approx OVERALL acceptance rate (0-1). cost = est. yearly total, out-of-state, before aid (thousands).
 // size = approx undergrad enrollment. drive = approx hours from 07079. testBlind = scores not considered.
 const SCHOOLS = [
-  {name:"Lehigh University", city:"Bethlehem, PA", control:"Private", size:5800, cost:88, drive:1.25, sat25:1310, sat75:1480, gpa:3.75, acc:.30, ie:true, me:true, fields:["engineering","history","geology"], note:"Elite engineering close to home. A high reach at your current stats, worth a swing if you love it."},
-  {name:"University of Maryland", city:"College Park, MD", control:"Public", size:31000, cost:60, drive:4, sat25:1340, sat75:1530, gpa:4.1, acc:.45, ie:false, me:true, fields:["engineering","history","geology","art"], note:"Outstanding mechanical engineering. No standalone undergrad industrial track. High reach."},
-  {name:"SUNY Binghamton", city:"Binghamton, NY", control:"Public", size:14000, cost:44, drive:3.25, sat25:1330, sat75:1490, gpa:3.8, acc:.42, ie:true, me:true, fields:["engineering","history","geology","art"], note:"Watson School industrial & systems is strong and competitive. A reach."},
-  {name:"University of Pittsburgh", city:"Pittsburgh, PA", control:"Public", size:20000, cost:56, drive:6, sat25:1280, sat75:1460, gpa:3.95, acc:.49, ie:true, me:true, fields:["engineering","history","geology","art"], note:"Strong industrial and mechanical. Rolling admissions, so applying early genuinely helps."},
-  {name:"University of Connecticut", city:"Storrs, CT", control:"Public", size:19000, cost:62, drive:2.25, sat25:1240, sat75:1440, gpa:3.7, acc:.54, ie:false, me:true, fields:["engineering","history","geology","art"], note:"Solid mechanical engineering, classic New England flagship feel."},
-  {name:"Penn State University Park", city:"State College, PA", control:"Public", size:40000, cost:58, drive:4, sat25:1180, sat75:1370, gpa:3.7, acc:.55, ie:true, me:true, fields:["engineering","history","geology","art"], note:"Top industrial and mechanical. Entry to major is competitive; the branch-to-UP 2+2 path is a real backup."},
-  {name:"Virginia Tech", city:"Blacksburg, VA", control:"Public", size:30000, cost:53, drive:7, sat25:1240, sat75:1430, gpa:4.0, acc:.57, ie:true, me:true, fields:["engineering","history","geology","art"], note:"One of the best industrial & systems programs anywhere. Right at the 7-hour edge."},
-  {name:"UMass Amherst", city:"Amherst, MA", control:"Public", size:24000, cost:56, drive:3.5, sat25:1240, sat75:1420, gpa:3.85, acc:.58, ie:true, me:true, visited:true, fields:["engineering","history","geology","art"], note:"The flagship you visited and liked. Engineering admits run well above the school average, so direct entry is a reach; undeclared-then-transfer is your backup plan."},
-  {name:"Worcester Polytechnic (WPI)", city:"Worcester, MA", control:"Private", size:5000, cost:86, drive:3, sat25:0, sat75:0, gpa:3.9, acc:.58, ie:false, me:true, testBlind:true, fields:["engineering"], note:"Project-based and fully test-blind, so a 1170 neither helps nor hurts. Judged on grades, rigor, and fit."},
-  {name:"University of Vermont", city:"Burlington, VT", control:"Public", size:11000, cost:64, drive:5.5, sat25:1180, sat75:1370, gpa:3.6, acc:.67, ie:false, me:true, fields:["engineering","history","geology","art"], note:"Mechanical engineering in a scenic college town."},
-  {name:"Hofstra University", city:"Hempstead, NY", control:"Private", size:6000, cost:73, drive:1, sat25:1140, sat75:1330, gpa:3.5, acc:.67, ie:false, me:true, fields:["engineering","history","geology","art"], note:"Mechanical engineering, the closest campus on this list to home."},
-  {name:"University of Delaware", city:"Newark, DE", control:"Public", size:19000, cost:58, drive:2.5, sat25:1190, sat75:1360, gpa:3.5, acc:.71, ie:false, me:true, fields:["engineering","history","geology","art"], note:"Popular with NJ students, strong mechanical engineering. Squarely in range."},
-  {name:"Quinnipiac University", city:"Hamden, CT", control:"Private", size:6000, cost:74, drive:1.5, sat25:1100, sat75:1300, gpa:3.4, acc:.72, ie:true, me:true, visited:true, fields:["engineering","history","art"], note:"You visited and liked it. Direct admit into mechanical or industrial, and likely your strongest engineering bet."},
-  {name:"Clarkson University", city:"Potsdam, NY", control:"Private", size:2800, cost:76, drive:6, sat25:1130, sat75:1350, gpa:3.6, acc:.74, ie:false, me:true, fields:["engineering"], note:"Small and engineering-focused with strong placement for its size."},
-  {name:"University of Rhode Island", city:"Kingston, RI", control:"Public", size:14000, cost:52, drive:3.5, sat25:1050, sat75:1270, gpa:3.55, acc:.75, ie:true, me:true, visited:true, fields:["engineering","history","geology","art"], note:"You visited and liked it. Has both industrial & systems and mechanical engineering."},
-  {name:"University at Buffalo (SUNY)", city:"Buffalo, NY", control:"Public", size:20000, cost:45, drive:6.5, sat25:1170, sat75:1370, gpa:3.7, acc:.67, ie:true, me:true, fields:["engineering","history","geology","art"], note:"Well-regarded industrial & systems, and more attainable than its SUNY peer."},
-  {name:"Drexel University", city:"Philadelphia, PA", control:"Private", size:14000, cost:82, drive:2, sat25:1190, sat75:1400, gpa:3.7, acc:.80, ie:false, me:true, fields:["engineering","history","art"], note:"Built around co-op work experience. Mechanical engineering with paid industry terms."},
-  {name:"Temple University", city:"Philadelphia, PA", control:"Public", size:24000, cost:50, drive:2, sat25:1130, sat75:1330, gpa:3.5, acc:.80, ie:false, me:true, fields:["engineering","history","geology","art"], note:"Accessible mechanical engineering on a lively urban campus."},
-  {name:"Western New England Univ.", city:"Springfield, MA", control:"Private", size:2500, cost:61, drive:2.5, sat25:1080, sat75:1280, gpa:3.3, acc:.82, ie:true, me:true, fields:["engineering","history"], note:"Dedicated industrial engineering plus mechanical, small and supportive. A comfortable likely."},
-  {name:"University of New Hampshire", city:"Durham, NH", control:"Public", size:12000, cost:54, drive:4.75, sat25:1100, sat75:1290, gpa:3.4, acc:.87, ie:false, me:true, fields:["engineering","history","geology","art"], note:"Classic New England public with mechanical engineering. A strong likely."},
-  {name:"University of Maine", city:"Orono, ME", control:"Public", size:9000, cost:45, drive:6.5, sat25:1050, sat75:1250, gpa:3.4, acc:.90, ie:false, me:true, fields:["engineering","history","geology","art"], note:"High-acceptance flagship with solid mechanical engineering, and the farthest north on your list. A genuine safety where you'd sit comfortably above the typical admit."},
-  {name:"Roger Williams University", city:"Bristol, RI", control:"Private", size:3800, cost:60, drive:3.75, sat25:1130, sat75:1300, gpa:3.45, acc:.88, ie:false, me:true, visited:true, fields:["engineering","history","art"], note:"You visited and liked it. A lightly selective school on the water near Providence, with an ABET-accredited engineering program (general, with concentrations). A comfortable likely."},
-  {name:"North Carolina State University", city:"Raleigh, NC", control:"Public", size:28000, cost:49, drive:8.5, sat25:1300, sat75:1470, gpa:3.9, acc:.41, ie:true, me:true, visited:true, fields:["engineering","history","geology","art"], note:"You visited and liked it. A top public engineering school with both industrial & systems and mechanical, but it sits past the 7-hour line and admits a strong-stats crowd, so treat it as a true reach."},
-  {name:"School of Visual Arts (SVA)", city:"New York, NY", control:"Private", size:3500, cost:75, drive:1, sat25:1080, sat75:1290, gpa:3.3, acc:.70, ie:false, me:false, fields:["art"], note:"Career-focused NYC art school, strong in illustration, animation, and design. The most accessible of the art picks; admission leans on your portfolio more than scores."},
-  {name:"Pratt Institute", city:"Brooklyn, NY", control:"Private", size:3600, cost:78, drive:1, sat25:1240, sat75:1410, gpa:3.6, acc:.73, ie:false, me:false, fields:["art"], note:"Top-tier art, design, and architecture in Brooklyn. Portfolio carries 60-plus percent of the decision, so a strong body of work matters more than the SAT."},
-  {name:"Parsons School of Design", city:"New York, NY", control:"Private", size:4200, cost:80, drive:1, sat25:1170, sat75:1380, gpa:3.4, acc:.55, ie:false, me:false, fields:["art"], note:"Part of The New School, world-known for fashion and design. Portfolio and creative voice drive the decision."},
-  {name:"Maryland Institute College of Art (MICA)", city:"Baltimore, MD", control:"Private", size:1800, cost:70, drive:3, sat25:1080, sat75:1350, gpa:3.45, acc:.80, ie:false, me:false, fields:["art"], note:"One of the oldest and most respected art colleges, and notably accessible. Test-optional and portfolio-driven."},
-  {name:"Massachusetts College of Art and Design", city:"Boston, MA", control:"Public", size:1700, cost:48, drive:4, sat25:1050, sat75:1260, gpa:3.3, acc:.63, ie:false, me:false, fields:["art"], note:"A rare public art college, so the cost runs well below the private art schools. Strong Boston arts community; portfolio-led admission."},
-  {name:"Syracuse University", city:"Syracuse, NY", control:"Private", size:15000, cost:82, drive:4.5, sat25:1180, sat75:1380, gpa:3.6, acc:.52, ie:false, me:false, fields:["art"], note:"Its College of Visual and Performing Arts is highly regarded for design and communications. A full university, so easy to keep options open. Also offers engineering if that stays in the mix."},
-  {name:"Rochester Institute of Technology (RIT)", city:"Rochester, NY", control:"Private", size:13000, cost:70, drive:5.5, sat25:1290, sat75:1440, gpa:3.65, acc:.67, ie:false, me:false, fields:["art"], note:"Known for design, game design, and new media, with a strong co-op model. Stats run a bit above your range, so a reach. Also offers engineering if that stays in the mix."},
-  {name:"Rhode Island School of Design (RISD)", city:"Providence, RI", control:"Private", size:2100, cost:80, drive:3.5, sat25:1230, sat75:1470, gpa:3.6, acc:.20, ie:false, me:false, fields:["art"], note:"The most prestigious art and design school in the country, and a genuine reach. Test-optional, and the portfolio is roughly two-thirds of the decision, so the stats-based odds understate a strong artist's real chance."}
+  {name:"Lehigh University", city:"Bethlehem, PA", control:"Private", size:5800, cost:88, drive:1.25, sat25:1310, sat75:1480, gpa:3.75, acc:.30, ie:true, me:true, fields:["engineering","history","geology"], lat:40.607, lon:-75.378, note:"Elite engineering close to home. A high reach at your current stats, worth a swing if you love it."},
+  {name:"University of Maryland", city:"College Park, MD", control:"Public", size:31000, cost:60, drive:4, sat25:1340, sat75:1530, gpa:4.1, acc:.45, ie:false, me:true, fields:["engineering","history","geology","art"], lat:38.987, lon:-76.943, note:"Outstanding mechanical engineering. No standalone undergrad industrial track. High reach."},
+  {name:"SUNY Binghamton", city:"Binghamton, NY", control:"Public", size:14000, cost:44, drive:3.25, sat25:1330, sat75:1490, gpa:3.8, acc:.42, ie:true, me:true, fields:["engineering","history","geology","art"], lat:42.089, lon:-75.968, note:"Watson School industrial & systems is strong and competitive. A reach."},
+  {name:"University of Pittsburgh", city:"Pittsburgh, PA", control:"Public", size:20000, cost:56, drive:6, sat25:1280, sat75:1460, gpa:3.95, acc:.49, ie:true, me:true, fields:["engineering","history","geology","art"], lat:40.444, lon:-79.953, note:"Strong industrial and mechanical. Rolling admissions, so applying early genuinely helps."},
+  {name:"University of Connecticut", city:"Storrs, CT", control:"Public", size:19000, cost:62, drive:2.25, sat25:1240, sat75:1440, gpa:3.7, acc:.54, ie:false, me:true, fields:["engineering","history","geology","art"], lat:41.808, lon:-72.249, note:"Solid mechanical engineering, classic New England flagship feel."},
+  {name:"Penn State University Park", city:"State College, PA", control:"Public", size:40000, cost:58, drive:4, sat25:1180, sat75:1370, gpa:3.7, acc:.55, ie:true, me:true, fields:["engineering","history","geology","art"], lat:40.798, lon:-77.86, note:"Top industrial and mechanical. Entry to major is competitive; the branch-to-UP 2+2 path is a real backup."},
+  {name:"Virginia Tech", city:"Blacksburg, VA", control:"Public", size:30000, cost:53, drive:7, sat25:1240, sat75:1430, gpa:4.0, acc:.57, ie:true, me:true, fields:["engineering","history","geology","art"], lat:37.228, lon:-80.423, note:"One of the best industrial & systems programs anywhere. Right at the 7-hour edge."},
+  {name:"UMass Amherst", city:"Amherst, MA", control:"Public", size:24000, cost:56, drive:3.5, sat25:1240, sat75:1420, gpa:3.85, acc:.58, ie:true, me:true, visited:true, fields:["engineering","history","geology","art"], lat:42.391, lon:-72.526, note:"The flagship you visited and liked. Engineering admits run well above the school average, so direct entry is a reach; undeclared-then-transfer is your backup plan."},
+  {name:"Worcester Polytechnic (WPI)", city:"Worcester, MA", control:"Private", size:5000, cost:86, drive:3, sat25:0, sat75:0, gpa:3.9, acc:.58, ie:false, me:true, testBlind:true, fields:["engineering"], lat:42.274, lon:-71.806, note:"Project-based and fully test-blind, so a 1170 neither helps nor hurts. Judged on grades, rigor, and fit."},
+  {name:"University of Vermont", city:"Burlington, VT", control:"Public", size:11000, cost:64, drive:5.5, sat25:1180, sat75:1370, gpa:3.6, acc:.67, ie:false, me:true, fields:["engineering","history","geology","art"], lat:44.478, lon:-73.196, note:"Mechanical engineering in a scenic college town."},
+  {name:"Hofstra University", city:"Hempstead, NY", control:"Private", size:6000, cost:73, drive:1, sat25:1140, sat75:1330, gpa:3.5, acc:.67, ie:false, me:true, fields:["engineering","history","geology","art"], lat:40.715, lon:-73.6, note:"Mechanical engineering, the closest campus on this list to home."},
+  {name:"University of Delaware", city:"Newark, DE", control:"Public", size:19000, cost:58, drive:2.5, sat25:1190, sat75:1360, gpa:3.5, acc:.71, ie:false, me:true, fields:["engineering","history","geology","art"], lat:39.681, lon:-75.751, note:"Popular with NJ students, strong mechanical engineering. Squarely in range."},
+  {name:"Quinnipiac University", city:"Hamden, CT", control:"Private", size:6000, cost:74, drive:1.5, sat25:1100, sat75:1300, gpa:3.4, acc:.72, ie:true, me:true, visited:true, fields:["engineering","history","art"], lat:41.42, lon:-72.897, note:"You visited and liked it. Direct admit into mechanical or industrial, and likely your strongest engineering bet."},
+  {name:"Clarkson University", city:"Potsdam, NY", control:"Private", size:2800, cost:76, drive:6, sat25:1130, sat75:1350, gpa:3.6, acc:.74, ie:false, me:true, fields:["engineering"], lat:44.665, lon:-74.998, note:"Small and engineering-focused with strong placement for its size."},
+  {name:"University of Rhode Island", city:"Kingston, RI", control:"Public", size:14000, cost:52, drive:3.5, sat25:1050, sat75:1270, gpa:3.55, acc:.75, ie:true, me:true, visited:true, fields:["engineering","history","geology","art"], lat:41.486, lon:-71.526, note:"You visited and liked it. Has both industrial & systems and mechanical engineering."},
+  {name:"University at Buffalo (SUNY)", city:"Buffalo, NY", control:"Public", size:20000, cost:45, drive:6.5, sat25:1170, sat75:1370, gpa:3.7, acc:.67, ie:true, me:true, fields:["engineering","history","geology","art"], lat:43.0, lon:-78.787, note:"Well-regarded industrial & systems, and more attainable than its SUNY peer."},
+  {name:"Drexel University", city:"Philadelphia, PA", control:"Private", size:14000, cost:82, drive:2, sat25:1190, sat75:1400, gpa:3.7, acc:.80, ie:false, me:true, fields:["engineering","history","art"], lat:39.957, lon:-75.189, note:"Built around co-op work experience. Mechanical engineering with paid industry terms."},
+  {name:"Temple University", city:"Philadelphia, PA", control:"Public", size:24000, cost:50, drive:2, sat25:1130, sat75:1330, gpa:3.5, acc:.80, ie:false, me:true, fields:["engineering","history","geology","art"], lat:39.981, lon:-75.155, note:"Accessible mechanical engineering on a lively urban campus."},
+  {name:"Western New England Univ.", city:"Springfield, MA", control:"Private", size:2500, cost:61, drive:2.5, sat25:1080, sat75:1280, gpa:3.3, acc:.82, ie:true, me:true, fields:["engineering","history"], lat:42.111, lon:-72.589, note:"Dedicated industrial engineering plus mechanical, small and supportive. A comfortable likely."},
+  {name:"University of New Hampshire", city:"Durham, NH", control:"Public", size:12000, cost:54, drive:4.75, sat25:1100, sat75:1290, gpa:3.4, acc:.87, ie:false, me:true, fields:["engineering","history","geology","art"], lat:43.134, lon:-70.934, note:"Classic New England public with mechanical engineering. A strong likely."},
+  {name:"University of Maine", city:"Orono, ME", control:"Public", size:9000, cost:45, drive:6.5, sat25:1050, sat75:1250, gpa:3.4, acc:.90, ie:false, me:true, fields:["engineering","history","geology","art"], lat:44.901, lon:-68.668, note:"High-acceptance flagship with solid mechanical engineering, and the farthest north on your list. A genuine safety where you'd sit comfortably above the typical admit."},
+  {name:"Roger Williams University", city:"Bristol, RI", control:"Private", size:3800, cost:60, drive:3.75, sat25:1130, sat75:1300, gpa:3.45, acc:.88, ie:false, me:true, visited:true, fields:["engineering","history","art"], lat:41.633, lon:-71.26, note:"You visited and liked it. A lightly selective school on the water near Providence, with an ABET-accredited engineering program (general, with concentrations). A comfortable likely."},
+  {name:"North Carolina State University", city:"Raleigh, NC", control:"Public", size:28000, cost:49, drive:8.5, sat25:1300, sat75:1470, gpa:3.9, acc:.41, ie:true, me:true, visited:true, fields:["engineering","history","geology","art"], lat:35.785, lon:-78.682, note:"You visited and liked it. A top public engineering school with both industrial & systems and mechanical, but it sits past the 7-hour line and admits a strong-stats crowd, so treat it as a true reach."},
+  {name:"School of Visual Arts (SVA)", city:"New York, NY", control:"Private", size:3500, cost:75, drive:1, sat25:1080, sat75:1290, gpa:3.3, acc:.70, ie:false, me:false, fields:["art"], lat:40.739, lon:-73.984, note:"Career-focused NYC art school, strong in illustration, animation, and design. The most accessible of the art picks; admission leans on your portfolio more than scores."},
+  {name:"Pratt Institute", city:"Brooklyn, NY", control:"Private", size:3600, cost:78, drive:1, sat25:1240, sat75:1410, gpa:3.6, acc:.73, ie:false, me:false, fields:["art"], lat:40.691, lon:-73.963, note:"Top-tier art, design, and architecture in Brooklyn. Portfolio carries 60-plus percent of the decision, so a strong body of work matters more than the SAT."},
+  {name:"Parsons School of Design", city:"New York, NY", control:"Private", size:4200, cost:80, drive:1, sat25:1170, sat75:1380, gpa:3.4, acc:.55, ie:false, me:false, fields:["art"], lat:40.735, lon:-73.995, note:"Part of The New School, world-known for fashion and design. Portfolio and creative voice drive the decision."},
+  {name:"Maryland Institute College of Art (MICA)", city:"Baltimore, MD", control:"Private", size:1800, cost:70, drive:3, sat25:1080, sat75:1350, gpa:3.45, acc:.80, ie:false, me:false, fields:["art"], lat:39.31, lon:-76.621, note:"One of the oldest and most respected art colleges, and notably accessible. Test-optional and portfolio-driven."},
+  {name:"Massachusetts College of Art and Design", city:"Boston, MA", control:"Public", size:1700, cost:48, drive:4, sat25:1050, sat75:1260, gpa:3.3, acc:.63, ie:false, me:false, fields:["art"], lat:42.337, lon:-71.099, note:"A rare public art college, so the cost runs well below the private art schools. Strong Boston arts community; portfolio-led admission."},
+  {name:"Syracuse University", city:"Syracuse, NY", control:"Private", size:15000, cost:82, drive:4.5, sat25:1180, sat75:1380, gpa:3.6, acc:.52, ie:false, me:false, fields:["art"], lat:43.038, lon:-76.135, note:"Its College of Visual and Performing Arts is highly regarded for design and communications. A full university, so easy to keep options open. Also offers engineering if that stays in the mix."},
+  {name:"Rochester Institute of Technology (RIT)", city:"Rochester, NY", control:"Private", size:13000, cost:70, drive:5.5, sat25:1290, sat75:1440, gpa:3.65, acc:.67, ie:false, me:false, fields:["art"], lat:43.084, lon:-77.68, note:"Known for design, game design, and new media, with a strong co-op model. Stats run a bit above your range, so a reach. Also offers engineering if that stays in the mix."},
+  {name:"Rhode Island School of Design (RISD)", city:"Providence, RI", control:"Private", size:2100, cost:80, drive:3.5, sat25:1230, sat75:1470, gpa:3.6, acc:.20, ie:false, me:false, fields:["art"], lat:41.826, lon:-71.408, note:"The most prestigious art and design school in the country, and a genuine reach. Test-optional, and the portfolio is roughly two-thirds of the decision, so the stats-based odds understate a strong artist's real chance."}
 ];
 
 // ---- Transfer-in feasibility: how realistic to switch from general/undeclared INTO engineering.
@@ -608,7 +671,7 @@ function band(p){
 function sizeTag(n){return n>=15000?"Large":n>=4000?"Mid-size":"Small";}
 
 // ---- State ----
-const state = {gpa:3.33, sat:1170, testOpt:false, mode:"engineering", maxDrive:7, filter:"all", favOnly:false, sort:"chance",
+const state = {gpa:3.33, sat:1170, testOpt:false, mode:"engineering", maxDrive:7, filter:"all", favOnly:false, sort:"chance", view:"list",
                fav:new Set(), interest:{}, hidden:new Set(), showHidden:false, query:"", compare:new Map()};
 
 const $=s=>document.querySelector(s);
@@ -853,6 +916,22 @@ function render(){
     }
   });
 
+  const mapview=$("#mapview"), mapcount=$("#mapcount");
+  if(state.view==="map"){
+    grid.style.display="none";
+    if(mapview) mapview.hidden=false;
+    if(mapcount) mapcount.textContent=view.length+" school"+(view.length!==1?"s":"")+" shown";
+    if(!window.L){
+      if(mapcount) mapcount.textContent="Loading map\u2026";
+      if(!window.__mapWaiting){ window.__mapWaiting=true; window.addEventListener("load",()=>{ window.__mapWaiting=false; render(); }); }
+      return;
+    }
+    renderMap(view); renderMapDots(view);
+    return;
+  }
+  if(mapview) mapview.hidden=true;
+  grid.style.display="";
+
   grid.innerHTML="";
   if(view.length===0){
     const e=document.createElement("div"); e.className="empty";
@@ -867,6 +946,74 @@ function render(){
   view.forEach(r=>grid.appendChild(buildCard(r.s)));
 }
 
+// ===== Map view (Leaflet + OpenStreetMap) =====
+const BAND_HEX={likely:"#1F8A5B",target:"#C7891B",reach:"#DD6B2E",highreach:"#C2402F"};
+let _map=null,_markers=null,_markerByName={};
+function ensureMap(){
+  if(_map) return _map;
+  _map=L.map("mapcanvas",{scrollWheelZoom:true}).setView([41.5,-74.3],6);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"&copy; OpenStreetMap contributors"}).addTo(_map);
+  _markers=L.layerGroup().addTo(_map);
+  return _map;
+}
+function mapPopupHtml(s,p,b){
+  const fav=state.fav.has(s.name);
+  const drive=s.drive!=null?`~${s.drive} hr${s.driveEst?" (est.)":""} from home`:"distance n/a";
+  const word=MAJORS[state.mode]?MAJORS[state.mode].word:"";
+  return `<div class="mpop"><div class="mpop-name">${s.name}</div>`
+    +`<div class="mpop-loc">${s.city} &middot; ${drive}</div>`
+    +`<div class="mpop-odds"><span class="mpop-band ${b.key}">${b.label}</span> <b>${pctFmt(p)}</b> ${word}</div>`
+    +`<div class="mpop-meta">${s.control||""}${s.cost?` &middot; ~$${s.cost}k/yr`:""}${s.size?` &middot; ${(s.size/1000).toFixed(s.size>=10000?0:1)}k students`:""}</div>`
+    +`<button class="mpop-star${fav?" on":""}" type="button">${fav?"\u2605 Starred":"\u2606 Star this school"}</button></div>`;
+}
+function renderMap(rows){
+  ensureMap();
+  _markers.clearLayers(); _markerByName={};
+  L.circleMarker([HOME_LAT,HOME_LON],{radius:6,color:"#18222E",weight:2,fillColor:"#ffffff",fillOpacity:1})
+    .bindTooltip("Home \u00b7 South Orange").addTo(_markers);
+  const pts=[[HOME_LAT,HOME_LON]];
+  rows.forEach(({s,p,b})=>{
+    if(s.lat==null||s.lon==null) return;
+    const fav=state.fav.has(s.name);
+    const color=BAND_HEX[b.key]||"#888";
+    const m=L.circleMarker([s.lat,s.lon],{radius:fav?9:7,color:fav?"#B07A1E":"#ffffff",weight:fav?3:1.5,fillColor:color,fillOpacity:.92});
+    m.bindPopup(mapPopupHtml(s,p,b),{minWidth:210});
+    m.on("popupopen",ev=>{
+      const btn=ev.popup.getElement().querySelector(".mpop-star");
+      if(!btn) return;
+      btn.addEventListener("click",()=>{
+        if(state.fav.has(s.name)) state.fav.delete(s.name); else state.fav.add(s.name);
+        const f=state.fav.has(s.name);
+        m.setStyle({radius:f?9:7,color:f?"#B07A1E":"#ffffff",weight:f?3:1.5});
+        btn.className="mpop-star"+(f?" on":""); btn.textContent=f?"\u2605 Starred":"\u2606 Star this school";
+        saveState(); renderMapDots(rows);
+      });
+    });
+    _markers.addLayer(m); _markerByName[s.name]=m;
+    pts.push([s.lat,s.lon]);
+  });
+  if(pts.length>1){ try{ _map.fitBounds(pts,{padding:[34,34],maxZoom:9}); }catch(e){} }
+  setTimeout(()=>{ if(_map) _map.invalidateSize(); },60);
+}
+function renderMapDots(rows){
+  const wrap=$("#mapdots"); if(!wrap) return;
+  wrap.innerHTML="";
+  if(!rows.length){ const e=document.createElement("div"); e.className="empty"; e.textContent="No schools match this view."; wrap.appendChild(e); return; }
+  rows.forEach(({s,p,b})=>{
+    const fav=state.fav.has(s.name);
+    const row=document.createElement("div"); row.className="mdot"+(fav?" fav":"");
+    row.innerHTML=`<span class="mdot-pin ${b.key}"></span>`
+      +`<span class="mdot-name">${s.name}${fav?' <span class="mdot-fav">\u2605</span>':''}</span>`
+      +`<span class="mdot-meta">${s.drive!=null?`~${s.drive}h`:"\u2014"} &middot; ${pctFmt(p)}</span>`;
+    row.addEventListener("click",()=>{
+      if(s.lat==null||s.lon==null) return;
+      ensureMap(); _map.setView([s.lat,s.lon],9,{animate:true});
+      const m=_markerByName[s.name]; if(m) m.openPopup();
+    });
+    wrap.appendChild(row);
+  });
+}
+
 // ---- Wiring ----
 $("#gpa").addEventListener("input",e=>{state.gpa=parseFloat(e.target.value)||0;render();});
 $("#search").addEventListener("input",e=>{state.query=e.target.value;render();});
@@ -879,6 +1026,13 @@ $("#dist").addEventListener("input",e=>{
 });
 $("#topt").addEventListener("change",e=>{state.testOpt=e.target.checked;render();});
 $("#favonly").addEventListener("change",e=>{state.favOnly=e.target.checked;render();});
+document.querySelectorAll("#viewtoggle button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    state.view=btn.dataset.v;
+    document.querySelectorAll("#viewtoggle button").forEach(b=>b.setAttribute("aria-pressed", b===btn));
+    render();
+  });
+});
 $("#resetBtn").addEventListener("click",()=>{
   const ok=confirm("Reset this device back to the starting point?\n\nThis clears your stars, interest ratings, removed schools, any schools added from Discover, and your saved GPA / SAT / distance. The visited campuses get re-starred. Only this browser on this device is affected, not Gael's copy.");
   if(!ok) return;
@@ -918,7 +1072,9 @@ function statesWithin(h){ const out=[]; for(const t of STATE_TIERS) if(t.h<=h+0.
 const SC_FIELDS = ["id","school.name","school.city","school.state","school.ownership","location.lat","location.lon",
   "latest.student.size","latest.cost.tuition.out_of_state","latest.cost.attendance.academic_year",
   "latest.admissions.admission_rate.overall","latest.admissions.sat_scores.25th_percentile.overall",
-  "latest.admissions.sat_scores.75th_percentile.overall","latest.academics.program_percentage.engineering"].join(",");
+  "latest.admissions.sat_scores.75th_percentile.overall","latest.academics.program_percentage.engineering",
+  "latest.academics.program_percentage.history","latest.academics.program_percentage.visual_performing",
+  "latest.academics.program_percentage.physical_science"].join(",");
 
 // ---- Drive-time estimate from home (South Orange, NJ 07079) using great-circle distance.
 // Straight-line miles, scaled by a road-circuity factor, then a highway speed plus a little overhead.
@@ -953,7 +1109,17 @@ function scMap(r){
   const costNum=r["latest.cost.attendance.academic_year"]||(r["latest.cost.tuition.out_of_state"]?r["latest.cost.tuition.out_of_state"]+16000:null);
   const acc=r["latest.admissions.admission_rate.overall"];
   const engPct=r["latest.academics.program_percentage.engineering"];
+  const histPct=r["latest.academics.program_percentage.history"];
+  const artPct=r["latest.academics.program_percentage.visual_performing"];
+  const geoPct=r["latest.academics.program_percentage.physical_science"]; // closest Scorecard bucket to geology/earth science
+  const fields=[];
+  if((engPct||0)>0) fields.push("engineering");
+  if((histPct||0)>0) fields.push("history");
+  if((geoPct||0)>0) fields.push("geology");
+  if((artPct||0)>0) fields.push("art");
   const drive=estDriveHours(r["location.lat"],r["location.lon"]);
+  const lat=(r["location.lat"]!=null&&!isNaN(r["location.lat"]))?+r["location.lat"]:null;
+  const lon=(r["location.lon"]!=null&&!isNaN(r["location.lon"]))?+r["location.lon"]:null;
   return {
     name:r["school.name"],
     city:(r["school.city"]||"")+", "+(r["school.state"]||""),
@@ -962,11 +1128,13 @@ function scMap(r){
     cost: costNum?Math.round(costNum/1000):null,
     drive:drive,
     driveEst:drive!=null,
+    lat:lat, lon:lon,
     sat25:r["latest.admissions.sat_scores.25th_percentile.overall"]||0,
     sat75:r["latest.admissions.sat_scores.75th_percentile.overall"]||0,
     gpa:null,
     acc: acc!=null?acc:0.65,
     eng:(engPct||0)>0,
+    fields:fields,
     discovered:true,
     note:"From the U.S. College Scorecard. GPA isn't included, and the drive time is a straight-line estimate from your home, so confirm both yourself. The odds here lean on selectivity and any reported SAT range."
   };
@@ -979,7 +1147,7 @@ async function runDiscovery(){
   lsSet("scorecardKey",($("#apikey").value||"").trim());
   const states=[...document.querySelectorAll("#dstates input:checked")].map(c=>c.value);
   if(!states.length){ status.className="disc-status err"; status.textContent="Pick at least one state."; return; }
-  const onlyEng=$("#dmajor").value==="eng";
+  const fieldWanted=$("#dmajor").value;
   const minSize=parseInt($("#dminsize").value)||0;
   const maxSize=parseInt($("#dmaxsize").value)||0;
   const maxCost=parseInt($("#dmaxcost").value)||0;
@@ -1003,7 +1171,7 @@ async function runDiscovery(){
       const k=s.name.toLowerCase();
       if(known.has(k)||seen.has(k)) return false; seen.add(k);
       if(state.hidden.has(s.name)) return false;
-      if(onlyEng&&!s.eng) return false;
+      if(fieldWanted!=="any" && !(s.fields||[]).includes(fieldWanted)) return false;
       if(minSize&&(!s.size||s.size<minSize)) return false;
       if(maxSize&&(!s.size||s.size>maxSize)) return false;
       if(maxCost&&(!s.cost||s.cost>Math.round(maxCost/1000))) return false;
@@ -1043,7 +1211,7 @@ function saveState(){
   const d={
     fav:[...state.fav], interest:state.interest,
     gpa:state.gpa, sat:state.sat, maxDrive:state.maxDrive,
-    mode:state.mode, testOpt:state.testOpt, filter:state.filter, sort:state.sort,
+    mode:state.mode, testOpt:state.testOpt, filter:state.filter, sort:state.sort, view:state.view,
     hidden:[...state.hidden],
     added:SCHOOLS.filter(s=>s.discovered)
   };
@@ -1063,6 +1231,8 @@ function loadState(){
   if(typeof d.testOpt==="boolean") state.testOpt=d.testOpt;
   if(d.filter) state.filter=d.filter;
   if(d.sort) state.sort=d.sort;
+  if(d.view==="map"||d.view==="list") state.view=d.view;
+  document.querySelectorAll("#viewtoggle button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.v===state.view));
   // reflect restored values in the controls
   const g=$("#gpa"); if(g) g.value=state.gpa;
   const sa=$("#sat"); if(sa) sa.value=state.sat||"";
