@@ -652,7 +652,7 @@ document.querySelectorAll("#mode button").forEach(btn=>{
 
 // ===== Discover more schools (U.S. Dept. of Education College Scorecard API) =====
 // Optional: paste your free key between the quotes to skip the on-page field.
-const SCORECARD_API_KEY = "A5fjZKPvwQnVbJqtDgfhtY7TPAxWU1IIfPqlliD0";
+const SCORECARD_API_KEY = "";
 // States grouped by rough drive bands from South Orange; the slider includes every band within range.
 const STATE_TIERS=[
   {h:2,  st:["NY","PA","CT","DE"]},
@@ -751,9 +751,15 @@ function initDiscovery(){
   renderStateBoxes();
   const keyInput=$("#apikey");
   if(keyInput){
-    const saved=SCORECARD_API_KEY||lsGet("scorecardKey")||"";
-    if(saved) keyInput.value=saved;
-    keyInput.addEventListener("change",()=>lsSet("scorecardKey",keyInput.value.trim()));
+    if(SCORECARD_API_KEY){
+      // Key baked into the code: use it silently and hide the input so it's never shown.
+      keyInput.value=SCORECARD_API_KEY;
+      const f=keyInput.closest(".field"); if(f) f.style.display="none";
+    } else {
+      const saved=lsGet("scorecardKey")||"";
+      if(saved) keyInput.value=saved;
+      keyInput.addEventListener("change",()=>lsSet("scorecardKey",keyInput.value.trim()));
+    }
   }
   const b=$("#dsearch"); if(b) b.addEventListener("click",runDiscovery);
 }
