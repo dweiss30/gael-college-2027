@@ -1,0 +1,1 @@
+window.SCORECARD_API_KEY = "A5fjZKPvwQnVbJqtDgfhtY7TPAxWU1IIfPqlliD0";
