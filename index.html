@@ -555,7 +555,12 @@ const SCHOOLS = [
   {name:"Massachusetts College of Art and Design", city:"Boston, MA", control:"Public", size:1700, cost:48, drive:4, sat25:1050, sat75:1260, gpa:3.3, acc:.63, ie:false, me:false, fields:["art"], lat:42.337, lon:-71.099, note:"A rare public art college, so the cost runs well below the private art schools. Strong Boston arts community; portfolio-led admission."},
   {name:"Syracuse University", city:"Syracuse, NY", control:"Private", size:15000, cost:82, drive:4.5, sat25:1180, sat75:1380, gpa:3.6, acc:.52, ie:false, me:false, fields:["art"], lat:43.038, lon:-76.135, note:"Its College of Visual and Performing Arts is highly regarded for design and communications. A full university, so easy to keep options open. Also offers engineering if that stays in the mix."},
   {name:"Rochester Institute of Technology (RIT)", city:"Rochester, NY", control:"Private", size:13000, cost:70, drive:5.5, sat25:1290, sat75:1440, gpa:3.65, acc:.67, ie:false, me:false, fields:["art"], lat:43.084, lon:-77.68, note:"Known for design, game design, and new media, with a strong co-op model. Stats run a bit above your range, so a reach. Also offers engineering if that stays in the mix."},
-  {name:"Rhode Island School of Design (RISD)", city:"Providence, RI", control:"Private", size:2100, cost:80, drive:3.5, sat25:1230, sat75:1470, gpa:3.6, acc:.20, ie:false, me:false, fields:["art"], lat:41.826, lon:-71.408, note:"The most prestigious art and design school in the country, and a genuine reach. Test-optional, and the portfolio is roughly two-thirds of the decision, so the stats-based odds understate a strong artist's real chance."}
+  {name:"Rhode Island School of Design (RISD)", city:"Providence, RI", control:"Private", size:2100, cost:80, drive:3.5, sat25:1230, sat75:1470, gpa:3.6, acc:.20, ie:false, me:false, fields:["art"], lat:41.826, lon:-71.408, note:"The most prestigious art and design school in the country, and a genuine reach. Test-optional, and the portfolio is roughly two-thirds of the decision, so the stats-based odds understate a strong artist's real chance."},
+  {name:"Hobart & William Smith Colleges", city:"Geneva, NY", control:"Private", size:2000, cost:76, drive:5.5, sat25:1180, sat75:1365, gpa:3.5, acc:.66, ie:false, me:false, fields:["history","geology","art"], lat:42.866, lon:-76.978, note:"A liberal arts college right on Seneca Lake, strong in history and the liberal arts, with a well-regarded geoscience program. No engineering. Test-optional, and your numbers sit near their middle, so flipping test-optional on gives a fairer read."},
+  {name:"Ithaca College", city:"Ithaca, NY", control:"Private", size:5000, cost:70, drive:4, sat25:1130, sat75:1330, gpa:3.5, acc:.70, ie:false, me:false, fields:["history","art"], lat:42.422, lon:-76.495, note:"A mid-size college on a hilltop over Cayuga Lake, known for design, media, and the arts, with solid history. No engineering."},
+  {name:"Gettysburg College", city:"Gettysburg, PA", control:"Private", size:2600, cost:78, drive:3, sat25:1280, sat75:1430, gpa:3.6, acc:.56, ie:false, me:false, fields:["history","art"], lat:39.836, lon:-77.238, note:"A liberal arts college on the Civil War battlefield, a standout for history, with art and a beautiful historic campus. No engineering. Test-optional, and since your SAT sits below their middle, turning test-optional on likely helps."},
+  {name:"Carnegie Mellon University", city:"Pittsburgh, PA", control:"Private", size:7500, cost:88, drive:6, sat25:1500, sat75:1560, gpa:3.9, acc:.11, ie:false, me:true, fields:["engineering","history","art"], lat:40.443, lon:-79.944, note:"An all-three powerhouse: world-class engineering, an elite School of Design and College of Fine Arts, and a solid history program. Urban campus, and a genuine shoot-for-the-stars."},
+  {name:"Cornell University", city:"Ithaca, NY", control:"Private", size:15000, cost:90, drive:4, sat25:1470, sat75:1550, gpa:3.95, acc:.08, ie:true, me:true, fields:["engineering","history","geology","art"], lat:42.448, lon:-76.481, note:"The dream pick that covers all three under one roof: top engineering, a deep history department, and the renowned College of Architecture, Art, and Planning, on a campus of gorges and waterfalls. A true reach for any applicant."}
 ];
 
 // ---- Transfer-in feasibility: how realistic to switch from general/undeclared INTO engineering.
@@ -583,7 +588,9 @@ const TRANSFER = {
   "University of New Hampshire":{level:"open", note:"Switching into engineering is generally feasible with the intro sequence."},
   "University of Maine":{level:"open", note:"Switching into engineering is generally feasible with the intro math and science."},
   "Roger Williams University":{level:"open", note:"A single, flexible engineering program, so settling into it is straightforward."},
-  "North Carolina State University":{level:"competitive", note:"Engineering uses a First-Year program and a competitive change-of-major into specific departments based on GPA."}
+  "North Carolina State University":{level:"competitive", note:"Engineering uses a First-Year program and a competitive change-of-major into specific departments based on GPA."},
+  "Cornell University":{level:"competitive", note:"Engineering is admitted directly into the college; internal transfers happen but are competitive."},
+  "Carnegie Mellon University":{level:"competitive", note:"Admitted by college, and moving into engineering or design later is competitive."}
 };
 const TLABEL={open:"Usually open", defined:"Defined pathway", moderate:"Moderate", competitive:"Competitive", firstyear:"First-year general"};
 
@@ -597,7 +604,8 @@ const SCENERY={
   "University of Maine":2,
   "Roger Williams University":3,"North Carolina State University":2,
   "School of Visual Arts (SVA)":1,"Pratt Institute":2,"Parsons School of Design":1,"Maryland Institute College of Art (MICA)":2,
-  "Massachusetts College of Art and Design":1,"Syracuse University":2,"Rochester Institute of Technology (RIT)":2,"Rhode Island School of Design (RISD)":3
+  "Massachusetts College of Art and Design":1,"Syracuse University":2,"Rochester Institute of Technology (RIT)":2,"Rhode Island School of Design (RISD)":3,
+  "Hobart & William Smith Colleges":3,"Ithaca College":3,"Gettysburg College":3,"Carnegie Mellon University":2,"Cornell University":3
 };
 
 // ---- Model ----
@@ -631,18 +639,18 @@ const MAJORS = {
 // 2 = standout / nationally recognized, 1 = strong / notable. Deliberately not a precise rank.
 // Only the majors below carry flags; others show none until data is added.
 const PROGRAMS = {
-  engineering: {2:["Lehigh University","Virginia Tech","North Carolina State University","Penn State University Park","University of Maryland","Worcester Polytechnic (WPI)"],
+  engineering: {2:["Cornell University","Carnegie Mellon University","Lehigh University","Virginia Tech","North Carolina State University","Penn State University Park","University of Maryland","Worcester Polytechnic (WPI)"],
                 1:["Drexel University","Clarkson University","University of Pittsburgh","University of Connecticut","SUNY Binghamton","University at Buffalo (SUNY)","UMass Amherst","University of Delaware"]},
   cs:          {2:["University of Maryland","Virginia Tech","North Carolina State University"],
                 1:["Penn State University Park","University of Pittsburgh","SUNY Binghamton","University at Buffalo (SUNY)","University of Connecticut","Drexel University","UMass Amherst"]},
   biology:     {2:["University of Maryland","North Carolina State University"],
                 1:["Penn State University Park","University of Pittsburgh","University of Vermont","University of Delaware","SUNY Binghamton","University of Connecticut","UMass Amherst"]},
-  history:     {2:[],
-                1:["University of Maryland","Penn State University Park","UMass Amherst","University of Pittsburgh","SUNY Binghamton","University of Connecticut","University of Vermont"]},
-  geology:     {2:["Penn State University Park","Virginia Tech"],
-                1:["University of Maryland","University of Pittsburgh","University at Buffalo (SUNY)","University of Vermont","University of Rhode Island","University of New Hampshire","North Carolina State University","UMass Amherst"]},
-  art:         {2:["Rhode Island School of Design (RISD)","Pratt Institute","Parsons School of Design","School of Visual Arts (SVA)","Maryland Institute College of Art (MICA)","Temple University","North Carolina State University"],
-                1:["Massachusetts College of Art and Design","Rochester Institute of Technology (RIT)","Syracuse University","University of Maryland","Penn State University Park","Virginia Tech","Drexel University","University at Buffalo (SUNY)","University of Connecticut","UMass Amherst"]}
+  history:     {2:["Cornell University","Gettysburg College"],
+                1:["University of Maryland","Penn State University Park","UMass Amherst","University of Pittsburgh","SUNY Binghamton","University of Connecticut","University of Vermont","Carnegie Mellon University","Hobart & William Smith Colleges"]},
+  geology:     {2:["Cornell University","Penn State University Park","Virginia Tech"],
+                1:["University of Maryland","University of Pittsburgh","University at Buffalo (SUNY)","University of Vermont","University of Rhode Island","University of New Hampshire","North Carolina State University","UMass Amherst","Hobart & William Smith Colleges"]},
+  art:         {2:["Cornell University","Carnegie Mellon University","Rhode Island School of Design (RISD)","Pratt Institute","Parsons School of Design","School of Visual Arts (SVA)","Maryland Institute College of Art (MICA)","Temple University","North Carolina State University"],
+                1:["Massachusetts College of Art and Design","Rochester Institute of Technology (RIT)","Syracuse University","Ithaca College","University of Maryland","Penn State University Park","Virginia Tech","Drexel University","University at Buffalo (SUNY)","University of Connecticut","UMass Amherst"]}
 };
 function programTier(major,name){
   const m=PROGRAMS[major]; if(!m) return 0;
